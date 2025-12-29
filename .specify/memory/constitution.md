@@ -226,13 +226,22 @@ master (stable, production-ready)
    - Follow phase-appropriate testing strategy
    - All code generated from specs (no manual coding)
 
-6. **Commit and Create PR**:
-   - Run `/sp.git.commit_pr` when phase complete
+6. **Commit and Create PR (MANDATORY AFTER EVERY FEATURE)**:
+   - **ALWAYS run** `/sp.git.commit_pr` after completing ANY feature
+   - This commits changes and creates a PR for review
    - Ensure all Definition of Done criteria met
 
 7. **Merge to Master**:
    - After approval and all checks pass
    - Feature becomes part of stable codebase
+
+**Post-Feature Completion Rule (NON-NEGOTIABLE)**:
+- After completing **ANY** feature (phase, sub-feature, user story), you MUST:
+  1. Ask to execute `/sp.git.commit_pr`
+  2. Ensure all tests pass
+  3. Ensure code quality checks pass
+  4. Review and approve the PR
+- No feature is considered "complete" without a PR
 
 **Branch Naming Convention**:
 - `phase-<N>-<short-description>`
