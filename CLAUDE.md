@@ -208,3 +208,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- Python 3.11+ + pytest, pytest-cov, mypy, ruff (001-console-todo)
+- In-memory (Python dict/list for task storage) (001-console-todo)
+
+## Recent Changes
+- 001-console-todo: Added Python 3.11+ + pytest, pytest-cov, mypy, ruff
