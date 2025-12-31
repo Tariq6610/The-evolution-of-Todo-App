@@ -1,0 +1,178 @@
+openapi: 3.1.0
+info:
+  title: Todo Phase II API
+  version: 1.0.0
+  description: API for multi-user Todo management with JWT authentication.
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: {type: string, format: email}
+                password: {type: string}
+                full_name: {type: string}
+      responses:
+        201: {description: User created}
+        400: {description: Invalid input or email already exists}
+
+  /auth/login:
+    post:
+      summary: Authenticate user and get token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username: {type: string}
+                password: {type: string}
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: {type: string}
+                  token_type: {type: string}
+        401: {description: Unauthorized}
+
+  /tasks:
+    get:
+      summary: List authenticated user's tasks
+      tags: [Tasks]
+      security: [{OAuth2PasswordBearer: []}]
+      parameters:
+        - name: status
+          in: query
+          schema: {type: string, enum: [pending, completed]}
+        - name: priority
+          in: query
+          schema: {type: string, enum: [low, medium, high]}
+        - name: q
+          in: query
+          description: Search term
+          schema: {type: string}
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Task'}
+
+    post:
+      summary: Create a new task
+      tags: [Tasks]
+      security: [{OAuth2PasswordBearer: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TaskCreate'}
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Task'}
+
+  /tasks/{task_id}:
+    get:
+      summary: Get task details
+      tags: [Tasks]
+      security: [{OAuth2PasswordBearer: []}]
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        200:
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Task'}
+        404: {description: Not found}
+
+    patch:
+      summary: Update task details
+      tags: [Tasks]
+      security: [{OAuth2PasswordBearer: []}]
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TaskUpdate'}
+      responses:
+        200:
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Task'}
+
+    delete:
+      summary: Delete task
+      tags: [Tasks]
+      security: [{OAuth2PasswordBearer: []}]
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        204: {description: No Content}
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string}
+        description: {type: string}
+        status: {type: string, enum: [pending, completed]}
+        priority: {type: string, enum: [low, medium, high]}
+        tags: {type: array, items: {type: string}}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+
+    TaskCreate:
+      type: object
+      required: [title]
+      properties:
+        title: {type: string}
+        description: {type: string}
+        priority: {type: string, default: medium}
+        tags: {type: array, items: {type: string}}
+
+    TaskUpdate:
+      type: object
+      properties:
+        title: {type: string}
+        description: {type: string}
+        status: {type: string}
+        priority: {type: string}
+        tags: {type: array, items: {type: string}}
+
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: /auth/login
+          scopes: {}

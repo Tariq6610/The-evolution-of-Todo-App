@@ -115,10 +115,10 @@ case "$STAGE" in
   constitution)
     # Constitution prompts always go to history/prompts/constitution/
     PROMPTS_DIR="$REPO_ROOT/history/prompts/constitution"
-    VALID_STAGES=("constitution")
+    VALID_STAGES=("constitution" "general")
     CONTEXT="constitution"
     ;;
-  spec|plan|tasks|red|green|refactor|explainer|misc)
+  spec|plan|tasks|red|green|refactor|explainer|misc|general)
     # Feature-specific stages: require specs/ directory and feature context
     if [[ ! -d "$SPECS_DIR" ]]; then
       echo "Error: Feature stage '$STAGE' requires specs/ directory and a feature context" >&2
@@ -134,60 +134,54 @@ case "$STAGE" in
       # Try to match current branch
       elif git rev-parse --show-toplevel >/dev/null 2>&1; then
         BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-        if [[ -n "$BRANCH" && "$BRANCH" != "main" && "$BRANCH" != "master" ]]; then
+        if [[ -n "$BRANCH" && "$BRANCH" != "main" && "$BRANCH" != "master" && "$BRANCH" != "001-console-todo" ]]; then
           # Check if branch name matches a feature directory
           if [[ -d "$SPECS_DIR/$BRANCH" ]]; then
             FEATURE="$BRANCH"
           fi
         fi
       fi
+    fi
 
-      # If still no feature, find the highest numbered feature
+    # If it's the general stage and no feature detected, route to history/prompts/general/
+    if [[ "$STAGE" == "general" && -z "$FEATURE" ]]; then
+      PROMPTS_DIR="$REPO_ROOT/history/prompts/general"
+      VALID_STAGES=("general")
+      CONTEXT="general"
+    else
+      # Fallback to detection logic for features if STAGE is general but we want it in a feature context
       if [[ -z "$FEATURE" ]]; then
-        max_num=0
-        latest_feature=""
-        for dir in "$SPECS_DIR"/*; do
-          if [[ -d "$dir" ]]; then
-            dirname=$(basename "$dir")
-            if [[ "$dirname" =~ ^([0-9]{3})- ]]; then
-              num=$((10#${BASH_REMATCH[1]}))
-              if (( num > max_num )); then
-                max_num=$num
-                latest_feature="$dirname"
+          # Find the highest numbered feature as a default fallback
+          max_num=0
+          latest_feature=""
+          for dir in "$SPECS_DIR"/*; do
+            if [[ -d "$dir" ]]; then
+              dirname=$(basename "$dir")
+              if [[ "$dirname" =~ ^([0-9]{3})- ]]; then
+                num=$((10#${BASH_REMATCH[1]}))
+                if (( num > max_num )); then
+                  max_num=$num
+                  latest_feature="$dirname"
+                fi
               fi
             fi
-          fi
-        done
+          done
 
-        if [[ -n "$latest_feature" ]]; then
-          FEATURE="$latest_feature"
-        else
-          echo "Error: No feature specified and no numbered features found in $SPECS_DIR" >&2
-          echo "Please specify --feature or create a feature directory first" >&2
-          exit 1
-        fi
+          if [[ -n "$latest_feature" ]]; then
+            FEATURE="$latest_feature"
+          fi
+      fi
+
+      if [[ -n "$FEATURE" && -d "$SPECS_DIR/$FEATURE" ]]; then
+        PROMPTS_DIR="$REPO_ROOT/history/prompts/$FEATURE"
+        VALID_STAGES=("spec" "plan" "tasks" "red" "green" "refactor" "explainer" "misc" "general")
+        CONTEXT="feature"
+      else
+        PROMPTS_DIR="$REPO_ROOT/history/prompts/general"
+        VALID_STAGES=("general")
+        CONTEXT="general"
       fi
     fi
-
-    # Validate feature exists
-    if [[ ! -d "$SPECS_DIR/$FEATURE" ]]; then
-      echo "Error: Feature directory not found: $SPECS_DIR/$FEATURE" >&2
-      echo "Available features:" >&2
-      ls -1 "$SPECS_DIR" 2>/dev/null | head -5 | sed 's/^/  - /' >&2
-      exit 1
-    fi
-
-    # Feature prompts go to history/prompts/<branch-name>/ (same as specs/<branch-name>/)
-    # This keeps naming consistent across branch, specs, and prompts directories
-    PROMPTS_DIR="$REPO_ROOT/history/prompts/$FEATURE"
-    VALID_STAGES=("spec" "plan" "tasks" "red" "green" "refactor" "explainer" "misc")
-    CONTEXT="feature"
-    ;;
-  general)
-    # General stage: catch-all that goes to history/prompts/general/
-    PROMPTS_DIR="$REPO_ROOT/history/prompts/general"
-    VALID_STAGES=("general")
-    CONTEXT="general"
     ;;
   *)
     echo "Error: Unknown stage '$STAGE'" >&2

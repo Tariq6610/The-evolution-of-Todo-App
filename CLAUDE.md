@@ -43,63 +43,31 @@ After completing requests, you **MUST** create a PHR (Prompt History Record).
 
 **PHR Creation Process:**
 
-1) Detect stage
-   - One of: constitution | spec | plan | tasks | red | green | refactor | explainer | misc | general
+1) Run the PHR creation script:
+   - Command: `.specify/scripts/bash/create-phr.sh --title "<3-7 word title>" --stage <stage> [--feature <feature-slug>] --json`
+   - Valid stages: constitution | spec | plan | tasks | red | green | refactor | explainer | misc | general
+   - Validating the output: The script returns a JSON object containing the `path` and `id`.
 
-2) Generate title
-   - 3–7 words; create a slug for the filename.
-
-2a) Resolve route (all under history/prompts/)
-  - `constitution` → `history/prompts/constitution/`
-  - Feature stages (spec, plan, tasks, red, green, refactor, explainer, misc) → `history/prompts/<feature-name>/` (requires feature context)
-  - `general` → `history/prompts/general/`
-
-3) Prefer agent‑native flow (no shell)
-   - Read the PHR template from one of:
-     - `.specify/templates/phr-template.prompt.md`
-     - `templates/phr-template.prompt.md`
-   - Allocate an ID (increment; on collision, increment again).
-   - Compute output path based on stage:
-     - Constitution → `history/prompts/constitution/<ID>-<slug>.constitution.prompt.md`
-     - Feature → `history/prompts/<feature-name>/<ID>-<slug>.<stage>.prompt.md`
-     - General → `history/prompts/general/<ID>-<slug>.general.prompt.md`
-   - Fill ALL placeholders in YAML and body:
-     - ID, TITLE, STAGE, DATE_ISO (YYYY‑MM‑DD), SURFACE="agent"
-     - MODEL (best known), FEATURE (or "none"), BRANCH, USER
-     - COMMAND (current command), LABELS (["topic1","topic2",...])
+2) Fill the generated PHR file:
+   - Use the `Edit` tool to fill ALL placeholders in YAML and body:
+     - ID, TITLE, STAGE, DATE_ISO (YYYY-MM-DD), SURFACE="agent"
+     - MODEL (claude-sonnet-4-5-20250929), FEATURE (or "none"), BRANCH (current branch), USER
+     - COMMAND (user input text), LABELS (["topic1",...])
      - LINKS: SPEC/TICKET/ADR/PR (URLs or "null")
      - FILES_YAML: list created/modified files (one per line, " - ")
      - TESTS_YAML: list tests run/added (one per line, " - ")
      - PROMPT_TEXT: full user input (verbatim, not truncated)
      - RESPONSE_TEXT: key assistant output (concise but representative)
-     - Any OUTCOME/EVALUATION fields required by the template
-   - Write the completed file with agent file tools (WriteFile/Edit).
-   - Confirm absolute path in output.
+   - Ensure NO unresolved placeholders (e.g., `{{THIS}}`, `[THAT]`) remain.
 
-4) Use sp.phr command file if present
-   - If `.**/commands/sp.phr.*` exists, follow its structure.
-   - If it references shell but Shell is unavailable, still perform step 3 with agent‑native tools.
+3) Reporting requirements:
+   - Always print: ID, path, stage, title of the PHR created.
+   - If the script fails, fallback to manual file creation using the template at `.specify/templates/phr-template.prompt.md`.
 
-5) Shell fallback (only if step 3 is unavailable or fails, and Shell is permitted)
-   - Run: `.specify/scripts/bash/create-phr.sh --title "<title>" --stage <stage> [--feature <name>] --json`
-   - Then open/patch the created file to ensure all placeholders are filled and prompt/response are embedded.
-
-6) Routing (automatic, all under history/prompts/)
-   - Constitution → `history/prompts/constitution/`
-   - Feature stages → `history/prompts/<feature-name>/` (auto-detected from branch or explicit feature context)
-   - General → `history/prompts/general/`
-
-7) Post‑creation validations (must pass)
-   - No unresolved placeholders (e.g., `{{THIS}}`, `[THAT]`).
-   - Title, stage, and dates match front‑matter.
-   - PROMPT_TEXT is complete (not truncated).
-   - File exists at the expected path and is readable.
-   - Path matches route.
-
-8) Report
-   - Print: ID, path, stage, title.
-   - On any failure: warn but do not block the main command.
-   - Skip PHR only for `/sp.phr` itself.
+4) Routing rules (handled by script):
+   - Constitution: `history/prompts/constitution/`
+   - Feature work: `history/prompts/<feature-name>/`
+   - General: `history/prompts/general/`
 
 ### 4. Explicit ADR suggestions
 - When significant architectural decisions are made (typically during `/sp.plan` and sometimes `/sp.tasks`), run the three‑part test and suggest documenting with:
@@ -199,11 +167,12 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 ## Basic Project Structure
 
 - `.specify/memory/constitution.md` — Project principles
+- `apps/<phase-id>-<phase-name>/` — Self-contained phase source code
 - `specs/<feature>/spec.md` — Feature requirements
 - `specs/<feature>/plan.md` — Architecture decisions
 - `specs/<feature>/tasks.md` — Testable tasks with cases
-- `history/prompts/` — Prompt History Records
-- `history/adr/` — Architecture Decision Records
+- `history/prompts/` — Prompt History Records (PHRs)
+- `history/adr/` — Architecture Decision Records (ADRs)
 - `.specify/` — SpecKit Plus templates and scripts
 
 ## Code Standards
@@ -212,6 +181,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 ## Active Technologies
 - Python 3.11+ + pytest, pytest-cov, mypy, ruff (001-console-todo)
 - In-memory (Python dict/list for task storage) (001-console-todo)
+- Python 3.11+, TypeScript 5.0+ + Next.js 14, FastAPI 0.100+, SQLModel, Pydantic v2, JWT, Tailwind CSS (002-fullstack-web)
+- Neon DB (PostgreSQL) (002-fullstack-web)
 
 ## Recent Changes
 - 001-console-todo: Added Python 3.11+ + pytest, pytest-cov, mypy, ruff

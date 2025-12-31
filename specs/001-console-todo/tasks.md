@@ -19,8 +19,8 @@ description: "Task list for feature implementation"
 
 ## Path Conventions
 
-- **Single project**: `src/`, `tests/` at repository root
-- Paths shown below assume single project - adjust based on plan.md structure
+- **Mono-repo Snapshot**: `apps/001-console-todo/src/`, `apps/001-console-todo/tests/`
+- All paths below are relative to `apps/001-console-todo/` unless otherwise specified.
 
 ## Phase 1: Setup (Shared Infrastructure)
 
@@ -202,8 +202,8 @@ description: "Task list for feature implementation"
 - [X] T082 [P] Run ruff format on all code
 - [X] T083 [P] Run ruff check on all code - fix all linting issues
 - [X] T084 [P] Run pytest with coverage - ensure 100% domain logic coverage
-- [ ] T085 Run application manual test following quickstart.md guide
-- [ ] T086 [P] Update README.md with project description and usage instructions
+- [X] T085 [P] Run application manual test following quickstart.md guide
+- [X] T086 [P] Update README.md with project description and usage instructions
 
 ---
 
