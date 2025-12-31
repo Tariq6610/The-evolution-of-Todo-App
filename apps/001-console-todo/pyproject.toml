@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evolution-of-todo"
+version = "0.1.0"
+description = "The Evolution of Todo - Phase I Console App"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.8.0",
+    "ruff>=0.1.0",
+]
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+warn_return_any = true
+warn_unused_ignores = true
+warn_unused_configs = true
+warn_redundant_casts = true
+strict_equality = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+warn_unused_ignores = false
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pydantic"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra"
+testpaths = ["tests", "src"]
+python_files = ["*.py"]
+python_functions = ["test_*"]
+python_classes = ["Test*"]
+
+[tool.pytest-cov]
+branch = true
+source = ["src"]
+omit = [
+    "tests/*",
+    "*/__init__.py",
+]
+report = ["term-missing", "html"]
+coverage_html_dir = "htmlcov"

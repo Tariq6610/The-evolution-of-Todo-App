@@ -1,4 +1,4 @@
-# The Evolution of Todo - Project Constitution
+i# The Evolution of Todo - Project Constitution
 
 ## Vision Statement
 
@@ -17,21 +17,22 @@ All code MUST be generated from specifications. Manual code writing is strictly 
 - **Traceability**: All implementation decisions trace back to spec requirements
 - **No Manual Code**: Developers write specs, not code; AI generates implementation
 
-### II. Phase-Based Evolution
+### II. Phase-Based Evolution (Mono-Repo Snapshot)
 
-The project evolves through distinct phases, each as a separate feature branch:
+The project evolves through distinct phases, each maintained as a self-contained application within the same repository to preserve its state as a "time capsule."
 
-| Phase | Description | Stack | Feature Level |
-|-------|-------------|-------|---------------|
-| **I** | In-Memory Python Console App | Python, pytest | Basic |
-| **II** | Full-Stack Web Application | Next.js, FastAPI, SQLModel, Neon DB | Basic + Intermediate |
-| **III** | AI-Powered Todo Chatbot | OpenAI ChatKit, Agents SDK, MCP SDK | All Levels |
-| **IV** | Local Kubernetes Deployment | Docker, Minikube, Helm, kubectl-ai | All Levels |
-| **V** | Advanced Cloud Deployment | Kafka, Dapr, DigitalOcean DOKS | All Levels + Extensions |
+| Phase | Description | Stack | Directory |
+|-------|-------------|-------|-----------|
+| **I** | In-Memory Python Console App | Python, pytest | `apps/001-console-todo/` |
+| **II** | Full-Stack Web Application | Next.js, FastAPI, SQLModel, Neon DB | `apps/002-fullstack-web/` |
+| **III** | AI-Powered Todo Chatbot | OpenAI ChatKit, Agents SDK | `apps/003-ai-chatbot/` |
+| **IV** | Local Kubernetes Deployment | Docker, Helm, kubectl-ai | `apps/004-kubernetes/` |
+| **V** | Advanced Cloud Deployment | Kafka, Dapr, DOKS | `apps/005-cloud-deployment/` |
 
-- Each phase is a **separate feature branch** merged to master upon completion
-- Phases are **additive**—never break existing functionality
-- Future phases may be added beyond Phase V
+- **Self-Containment**: Each phase directory MUST be completely independent, containing its own domain logic, adapters, tests, and configuration.
+- **No Shared Core**: To ensure each phase remains a perfect reference point, phases do NOT share live code libraries. Duplication is intentional for architectural isolation.
+- **Additive Main**: The `main` branch contains all completed phases. When Phase II is completed, the repository will contain both `apps/001-console-todo/` and `apps/002-fullstack-web/`.
+- **Feature Branches**: Active development occurs on `phase-N-<feature-name>` branches, which are merged to `main` upon phase completion.
 
 ### III. Feature Levels
 
