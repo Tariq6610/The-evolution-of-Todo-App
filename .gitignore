@@ -52,3 +52,33 @@ Thumbs.db
 *.bak
 *.swp
 *~
+
+# Project-specific ignore patterns
+apps/002-fullstack-web/backend/__pycache__/
+apps/002-fullstack-web/backend/*.egg-info/
+apps/002-fullstack-web/backend/dist/
+apps/002-fullstack-web/backend/.venv/
+apps/002-fullstack-web/backend/venv/
+apps/002-fullstack-web/frontend/.next/
+apps/002-fullstack-web/frontend/node_modules/
+apps/002-fullstack-web/frontend/out/
+apps/002-fullstack-web/backend/logs/
+apps/002-fullstack-web/frontend/.next/logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+apps/002-fullstack-web/backend/todo.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# History/testing artifacts
+apps/002-fullstack-web/integration_*.md
+apps/002-fullstack-web/test_api.sh
+coverage/
+
