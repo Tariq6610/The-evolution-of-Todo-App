@@ -68,14 +68,34 @@ class TodoService:
         )
         return self.storage.save(task)
 
-    def get_all_tasks(self) -> list[Task]:
+    def get_all_tasks(
+        self,
+        search: str | None = None,
+        status: str | None = None,
+        priority: str | None = None,
+        tag: str | None = None,
+        sort_by: str | None = None,
+    ) -> list[Task]:
         """
-        Retrieve all tasks for display.
+        Retrieve all tasks with optional filtering and sorting.
+
+        Args:
+            search: Filter by keyword in title or description
+            status: Filter by status (PENDING or COMPLETED)
+            priority: Filter by priority (LOW, MEDIUM, or HIGH)
+            tag: Filter by tag
+            sort_by: Sort by field (created_at, updated_at, title, priority, -priority)
 
         Returns:
-            List of all tasks (empty list if none exist)
+            List of filtered and sorted tasks (empty list if none match)
         """
-        return self.storage.get_all()
+        return self.storage.get_all(
+            search=search,
+            status=status,
+            priority=priority,
+            tag=tag,
+            sort_by=sort_by,
+        )
 
     def update_task(
         self,

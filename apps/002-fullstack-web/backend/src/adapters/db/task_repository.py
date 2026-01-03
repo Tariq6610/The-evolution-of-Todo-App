@@ -6,6 +6,7 @@ from src.domain.entities.task import Task as DomainTask
 from datetime import datetime, UTC
 from src.domain.ports.storage_port import StoragePort
 import uuid
+from sqlalchemy import case
 
 class TaskTable(SQLModel, table=True):
     __tablename__ = "tasks"
@@ -59,8 +60,72 @@ class SQLModelTaskRepository(StoragePort):
         db_task = self.session.get(TaskTable, task_id)
         return db_task.to_domain() if db_task else None
 
-    def get_all(self) -> List[DomainTask]:
+    def get_all(
+        self,
+        search: Optional[str] = None,
+        status: Optional[str] = None,
+        priority: Optional[str] = None,
+        tag: Optional[str] = None,
+        sort_by: Optional[str] = None,
+    ) -> List[DomainTask]:
+        """
+        Retrieve all tasks with optional filtering and sorting.
+
+        Args:
+            search: Filter by keyword in title or description
+            status: Filter by status (PENDING or COMPLETED)
+            priority: Filter by priority (LOW, MEDIUM, or HIGH)
+            tag: Filter by tag
+            sort_by: Sort by field (created_at, updated_at, title, priority)
+
+        Returns:
+            List of filtered and sorted tasks
+        """
         statement = select(TaskTable)
+
+        # Apply filters
+        if search:
+            statement = statement.where(
+                (TaskTable.title.contains(search))
+                | (TaskTable.description.contains(search))
+            )
+
+        if status:
+            statement = statement.where(TaskTable.status == status)
+
+        if priority:
+            statement = statement.where(TaskTable.priority == priority)
+
+        if tag:
+            statement = statement.where(TaskTable.tags.contains(tag))
+
+        # Apply sorting
+        if sort_by:
+            if sort_by == "created_at":
+                statement = statement.order_by(TaskTable.created_at)
+            elif sort_by == "updated_at":
+                statement = statement.order_by(TaskTable.updated_at)
+            elif sort_by == "title":
+                statement = statement.order_by(TaskTable.title)
+            elif sort_by == "priority":
+                # Priority sorting: HIGH -> MEDIUM -> LOW
+                from sqlalchemy import case
+                priority_order = case(
+                    (TaskTable.priority == "HIGH", 1),
+                    (TaskTable.priority == "MEDIUM", 2),
+                    (TaskTable.priority == "LOW", 3),
+                )
+                statement = statement.order_by(priority_order)
+            elif sort_by == "-priority":
+                # Reverse priority sorting: LOW -> MEDIUM -> HIGH
+                from sqlalchemy import case
+                priority_order = case(
+                    (TaskTable.priority == "LOW", 1),
+                    (TaskTable.priority == "MEDIUM", 2),
+                    (TaskTable.priority == "HIGH", 3),
+                )
+                statement = statement.order_by(priority_order)
+
         results = self.session.exec(statement)
         return [db_task.to_domain() for db_task in results]
 

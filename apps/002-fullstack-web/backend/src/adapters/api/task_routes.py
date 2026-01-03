@@ -58,9 +58,22 @@ def create_task(task_in: TaskCreateRequest, todo_service: TodoService = Depends(
         )
 
 @router.get("/", response_model=List[TaskResponse])
-def get_all_tasks(todo_service: TodoService = Depends(get_todo_service)):
+def get_all_tasks(
+    search: str | None = None,
+    status: str | None = None,
+    priority: str | None = None,
+    tag: str | None = None,
+    sort_by: str | None = None,
+    todo_service: TodoService = Depends(get_todo_service),
+):
     try:
-        tasks = todo_service.get_all_tasks()
+        tasks = todo_service.get_all_tasks(
+            search=search,
+            status=status,
+            priority=priority,
+            tag=tag,
+            sort_by=sort_by,
+        )
         return tasks
     except Exception as e:
         raise HTTPException(
