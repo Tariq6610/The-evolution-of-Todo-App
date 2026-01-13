@@ -1,8 +1,11 @@
 from sqlmodel import Session, create_engine, SQLModel
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from backend directory (absolute path)
+BACKEND_DIR = Path(__file__).parent.parent.parent
+load_dotenv(BACKEND_DIR / ".env")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:

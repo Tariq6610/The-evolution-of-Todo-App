@@ -57,6 +57,36 @@ class StoragePort(ABC):
         pass
 
     @abstractmethod
+    def save_for_user(self, task: Task, user_id: str) -> Task:
+        """
+        Save a new task for a specific user.
+
+        Args:
+            task: Task to save (may have placeholder ID)
+            user_id: ID of the user to save the task for
+
+        Returns:
+            Task with generated unique ID
+
+        Raises:
+            ValueError: If task validation fails
+        """
+        pass
+
+    @abstractmethod
+    def get_all_for_user(self, user_id: str) -> list[Task]:
+        """
+        Retrieve all tasks for a specific user.
+
+        Args:
+            user_id: ID of the user whose tasks to retrieve
+
+        Returns:
+            List of tasks for the specified user (empty list if none exist)
+        """
+        pass
+
+    @abstractmethod
     def update(self, task_id: str, task: Task) -> Task:
         """
         Update an existing task.
@@ -74,6 +104,24 @@ class StoragePort(ABC):
         pass
 
     @abstractmethod
+    def update_for_user(self, task_id: str, task: Task, user_id: str) -> Task:
+        """
+        Update an existing task for a specific user.
+
+        Args:
+            task_id: ID of task to update
+            task: Updated task data
+            user_id: ID of the user updating the task
+
+        Returns:
+            Updated task
+
+        Raises:
+            ValueError: If task_id not found or task doesn't belong to user
+        """
+        pass
+
+    @abstractmethod
     def delete(self, task_id: str) -> None:
         """
         Delete a task by ID.
@@ -87,6 +135,20 @@ class StoragePort(ABC):
         pass
 
     @abstractmethod
+    def delete_for_user(self, task_id: str, user_id: str) -> None:
+        """
+        Delete a task by ID for a specific user.
+
+        Args:
+            task_id: ID of task to delete
+            user_id: ID of the user deleting the task
+
+        Raises:
+            ValueError: If task_id not found or task doesn't belong to user
+        """
+        pass
+
+    @abstractmethod
     def exists(self, task_id: str) -> bool:
         """
         Check if a task exists.
@@ -96,5 +158,19 @@ class StoragePort(ABC):
 
         Returns:
             True if task exists, False otherwise
+        """
+        pass
+
+    @abstractmethod
+    def exists_for_user(self, task_id: str, user_id: str) -> bool:
+        """
+        Check if a task exists for a specific user.
+
+        Args:
+            task_id: ID of task to check
+            user_id: ID of the user to check for
+
+        Returns:
+            True if task exists for the user, False otherwise
         """
         pass

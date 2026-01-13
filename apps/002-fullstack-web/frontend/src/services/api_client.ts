@@ -1,10 +1,12 @@
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosInstance, AxiosError } from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 /**
  * Custom API Client based on Axios
  * Configured with base URL and interceptors for authentication
+ * Uses cookies for authentication (set by login endpoint)
  */
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -12,23 +14,18 @@ const apiClient: AxiosInstance = axios.create({
     "Content-Type": "application/json",
   },
   timeout: 10000, // 10 seconds
+  withCredentials: true, // Enable cookies for authentication
 });
 
-// Request interceptor: attach token if present
-apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("auth_token");
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-    return config;
-  },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  }
-);
+// Request interceptor: (not needed for cookie-based auth, but kept for future)
+// apiClient.interceptors.request.use(
+//   (config: InternalAxiosRequestConfig) => {
+//     return config;
+//   },
+//   (error: AxiosError) => {
+//     return Promise.reject(error);
+//   }
+// );
 
 // Response interceptor: handle token expiration or global errors
 apiClient.interceptors.response.use(
@@ -38,17 +35,14 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     // If status is 401, token might be expired
     if (error.response?.status === 401) {
-      if (typeof window !== "undefined") {
-        // Clear token and redirect to login if necessary
-        localStorage.removeItem("auth_token");
-        // We could use window.location.href = '/login' here or let components handle it
-      }
+      // Clear any client-side state if needed
     }
 
     // Transform error response for easier handling in components
-    const message = (error.response?.data as { detail?: string })?.detail || error.message;
+    const message =
+      (error.response?.data as { detail?: string })?.detail || error.message;
     return Promise.reject(new Error(message));
-  }
+  },
 );
 
 export default apiClient;

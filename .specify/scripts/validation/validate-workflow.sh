@@ -1,3 +1,4 @@
+
 #!/bin/bash
 # Infrastructure Validation Script
 # Validates compliance with project constitution
@@ -225,12 +226,54 @@ validate_ts_quality() {
     # Check if eslint is available
     if command -v eslint &> /dev/null || command -v npx &> /dev/null; then
         echo "Running eslint..."
-        if npx eslint $ts_files || eslint $ts_files; then
-            print_success "eslint passed"
-        else
-            print_error "eslint failed. Run: eslint <files>"
-            return 1
-        fi
+
+        # Group files by their nearest parent directory with eslint config
+        declare -A dir_to_files
+
+        for f in $ts_files; do
+            # Find the nearest parent directory with eslint config
+            dir=""
+            path="$f"
+            while [[ -n "$path" ]]; do
+                if ls $(dirname "$path")/eslint.config.* 1>/dev/null 2>&1; then
+                    dir=$(dirname "$path")
+                    break
+                fi
+                path=$(dirname "$path")
+            done
+
+            if [[ -n "$dir" ]]; then
+                dir_to_files["$dir"]="${dir_to_files[$dir]} $f"
+            else
+                # No config found, add to unhandled
+                dir_to_files["__unhandled__"]="${dir_to_files[__unhandled__]} $f"
+            fi
+        done
+
+        # Run eslint for each directory with config
+        for dir in "${!dir_to_files[@]}"; do
+            if [[ "$dir" == "__unhandled__" ]]; then
+                echo "Skipping files without eslint config: ${dir_to_files[$dir]}"
+                continue
+            fi
+
+            echo "Checking files in $dir..."
+            files="${dir_to_files[$dir]}"
+
+            # Strip directory prefix for relative paths when running from that dir
+            rel_files=""
+            for f in $files; do
+                rel="${f#$dir/}"
+                rel_files="$rel_files $rel"
+            done
+
+            if (cd "$dir" && npx eslint $rel_files 2>/dev/null); then
+                print_success "eslint passed ($dir)"
+            else
+                print_error "eslint failed in $dir"
+                return 1
+            fi
+        done
     else
         print_warning "eslint not installed, skipping linting"
     fi
