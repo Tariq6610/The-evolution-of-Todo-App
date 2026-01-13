@@ -9,10 +9,16 @@ app = FastAPI(
 )
 
 # Configure CORS
+# Note: When using credentials (cookies), origins must be specific, not "*"
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",    # Next.js frontend
+    "http://127.0.0.1:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust in production
-    allow_credentials=True,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,  # Allow cookies and credentials
     allow_methods=["*"],
     allow_headers=["*"],
 )

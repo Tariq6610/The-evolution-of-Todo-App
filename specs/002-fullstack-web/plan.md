@@ -99,6 +99,87 @@ This section describes the UI enhancement feature to be added to the existing To
 4. Add animations to task items and forms
 5. Enhance overall visual design
 
+## Dashboard Redesign Addendum
+
+### Overview
+Redesign the existing minimal dashboard into a beautiful, insight-driven, and action-oriented overview that summarizes without replicating the Tasks page.
+
+### Design Goals
+- **Summarize, not replicate** - Dashboard should provide overview, not full task lists
+- **Immediate communication** - Show productivity status, what needs attention, and quick actions
+- **Visual style** - Modern, calm, premium feel with motion-enhanced but not distracting interactions
+
+### Required Sections
+
+#### 1. Hero Summary Section (Top)
+- Dynamic greeting (e.g., "Good afternoon, Tariq")
+- Short productivity summary ("You've completed 18 of 25 tasks")
+- Visual progress indicator (circular progress ring or progress bar)
+- Subtle entrance animations with count-up numbers
+
+#### 2. Compact Stats Overview
+- Total Tasks, Completed, Pending, High Priority
+- Compact cards with icons/indicators
+- Animated number transitions
+- Soft shadows and responsive layout
+
+#### 3. Visual Insights (Lightweight Charts)
+- Donut chart for task status distribution
+- Bar/stacked chart for priority levels
+- Minimal axes, clear color hierarchy
+- Smooth entrance animation
+
+#### 4. "Needs Attention" Panels
+- High-priority tasks (top 3-5)
+- Recently updated tasks
+- Card-based layout, clear priority distinction
+- Click to navigate to Tasks page
+
+#### 5. Quick Actions Section
+- Add new task, Add high-priority task, Navigate to tasks
+- Icon-based buttons with hover/tap feedback
+- Clean, uncluttered layout
+
+#### 6. Smart Snapshot (Insight Card)
+- One intelligent insight derived from data
+- Examples: "Most pending tasks are Medium priority"
+- Text-focused, optional icon
+- No AI/prediction logic
+
+### Technical Approach
+- Use existing task data (no backend changes)
+- Create reusable dashboard components:
+  - `HeroSummary.tsx` - Dynamic greeting + progress
+  - `StatsCard.tsx` - Compact stat cards
+  - `TaskStatusChart.tsx` - Donut chart for status
+  - `PriorityChart.tsx` - Bar chart for priorities
+  - `AttentionPanel.tsx` - High-priority/recent tasks
+  - `QuickActions.tsx` - Action buttons
+  - `SmartInsight.tsx` - Insight card
+  - `AnimatedCounter.tsx` - Number animations
+- Implement entrance animations using Framer Motion
+- Ensure responsive design for mobile/tablet
+
+### Dependencies
+- `recharts` for lightweight charts (already in use or add if needed)
+- `framer-motion` for animations
+- Existing Tailwind CSS for styling
+
+### Visual Guidelines
+- Card-based layout with consistent spacing
+- Glassmorphism or soft elevated cards
+- Framer Motion for: entrance animations, count-ups, progress transitions
+- Avoid over-animation
+- Excellent mobile and tablet responsiveness
+- Graceful empty states with friendly messaging
+
+### Out of Scope (Phase 2)
+- Full task lists on dashboard
+- Collaboration features
+- Real-time updates
+- Heavy analytics dashboards
+- Backend schema changes
+
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**

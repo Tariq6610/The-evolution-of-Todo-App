@@ -1,81 +1,167 @@
-'use client';
+"use client";
 
-import { createContext, useContext, ReactNode, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import apiClient from '@/services/api_client';
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
+import { useRouter } from "next/navigation";
+import apiClient from "@/services/api_client";
 
 interface AuthContextType {
-  user: any | null;
+  user: { id?: string; email?: string; name?: string } | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  register: (email: string, password: string, fullName: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    fullName: string,
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper to check for auth cookie
+function hasAuthCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie
+    .split(";")
+    .some((c) => c.trim().startsWith("access_token="));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<{
+    id?: string;
+    email?: string;
+    name?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is logged in on initial load
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      // In a real app, you would verify the token and get user details
-      // For now, we'll just set a basic user object
-      setUser({ id: 'temp', email: localStorage.getItem('user_email') || 'temp' });
-    }
-    setLoading(false);
+    // Check if user is logged in by making an API call to verify the token
+    // Note: We make the API call regardless of hasAuthCookie() result since
+    // access_token is HTTP-only and not accessible via JavaScript
+    const checkAuthStatus = async () => {
+      console.log("[DEBUG] AuthProvider - Starting auth check");
+      console.log(
+        "[DEBUG] AuthProvider - hasAuthCookie() (will be false for HTTP-only):",
+        hasAuthCookie(),
+      );
+      console.log(
+        "[DEBUG] AuthProvider - All cookies (non-HTTP-only only):",
+        document.cookie,
+      );
+
+      // Always make the API call to check authentication status
+      // The access_token cookie will be sent automatically with the request due to withCredentials: true
+      console.log(
+        "[DEBUG] AuthProvider - Making API call to /auth/me to verify authentication",
+      );
+      try {
+        const response = await apiClient.get("/auth/me", {
+          withCredentials: true,
+        });
+        console.log(
+          "[DEBUG] AuthProvider - API call successful, user data:",
+          response.data,
+        );
+        setUser(response.data);
+      } catch (error: unknown) {
+        const err = error as {
+          message?: string;
+          response?: { status?: number; data?: { detail?: string } };
+        };
+        console.log(
+          "[DEBUG] AuthProvider - API call failed, error:",
+          err.message,
+        );
+        console.log("[DEBUG] AuthProvider - Error response:", err.response);
+        // Token is invalid or expired, clear any stored user info
+        document.cookie =
+          "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie =
+          "user_email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        setUser(null);
+      }
+      console.log("[DEBUG] AuthProvider - Setting loading to false");
+      setLoading(false);
+    };
+
+    checkAuthStatus();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       // Prepare form data as URLSearchParams to match OAuth2PasswordRequestForm expectations
       const params = new URLSearchParams();
-      params.append('username', email);
-      params.append('password', password);
+      params.append("username", email);
+      params.append("password", password);
 
-      const response = await apiClient.post('/auth/login', params, {
+      const response = await apiClient.post("/auth/login", params, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        }
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        withCredentials: true, // Enable cookies
       });
 
-      // Store token in localStorage
-      localStorage.setItem('auth_token', response.data.access_token);
-      localStorage.setItem('user_email', email);
-      setUser({ id: 'temp', email });
-      router.push('/dashboard');
-    } catch (error: any) {
+      // Set user email cookie for persistence
+      document.cookie = `user_email=${encodeURIComponent(email)}; path=/; max-age=31536000`;
+
+      // Set user state with complete user data and redirect
+      setUser({
+        id: response.data.user_id,
+        email: response.data.email,
+      });
+      router.push("/dashboard");
+    } catch (error: unknown) {
       throw error;
     }
   };
 
-  const register = async (email: string, password: string, fullName: string) => {
+  const register = async (
+    email: string,
+    password: string,
+    fullName: string,
+  ) => {
     try {
-      const response = await apiClient.post('/auth/register', {
-        email,
-        password,
-        full_name: fullName
-      });
+      const response = await apiClient.post(
+        "/auth/register",
+        {
+          email,
+          password,
+          full_name: fullName,
+        },
+        {
+          withCredentials: true, // Enable cookies
+        },
+      );
 
-      // Store token in localStorage
-      localStorage.setItem('auth_token', response.data.access_token || response.data.id);
-      localStorage.setItem('user_email', email);
-      setUser({ id: 'temp', email });
-      router.push('/dashboard');
-    } catch (error: any) {
+      // Set user email cookie
+      document.cookie = `user_email=${encodeURIComponent(email)}; path=/; max-age=31536000`;
+
+      // Set user state with complete user data and redirect
+      setUser({
+        id: response.data.id,
+        email: response.data.email,
+      });
+      router.push("/dashboard");
+    } catch (error: unknown) {
       throw error;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_email');
+    // Clear auth cookie
+    document.cookie =
+      "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie =
+      "user_email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     setUser(null);
-    router.push('/login');
+    router.push("/login");
   };
 
   return (
@@ -88,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
