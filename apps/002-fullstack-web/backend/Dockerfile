@@ -14,7 +14,7 @@ COPY . ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose the port that the app runs on
-EXPOSE $PORT
+EXPOSE ${PORT:-8000}
 
 # Run the web service on container startup
-CMD ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "python scripts/start_server.py"]
