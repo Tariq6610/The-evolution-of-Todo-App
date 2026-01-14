@@ -15,6 +15,7 @@ app = FastAPI(
 ALLOWED_ORIGINS: list[str] = [
     "http://localhost:3000",  # Next.js frontend
     "http://127.0.0.1:3000",
+    "https://the-evolution-of-todo-app-production.up.railway.app",  # Deployed frontend
 ]
 
 app.add_middleware(
