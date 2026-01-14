@@ -11,13 +11,45 @@ Evolve the Todo application from a Phase I console app to a Phase II full-stack 
 
 **Language/Version**: Python 3.11+, TypeScript 5.0+
 **Primary Dependencies**: Next.js 14, FastAPI 0.100+, SQLModel, Pydantic v2, JWT, Tailwind CSS
-**Storage**: Neon DB (PostgreSQL)
+**Storage**: Neon DB (PostgreSQL) - Migration from SQLite to Neon DB
 **Testing**: pytest (backend), Playwright (frontend/E2E), pytest-bdd
 **Target Platform**: Cloud (Vercel for frontend, Render/Railway for backend)
 **Project Type**: web (frontend + backend)
 **Performance Goals**: < 200ms API response p95, < 2s initial page load
 **Constraints**: < 200ms p95, strict type checking (mypy/TypeScript), multi-user isolation
 **Scale/Scope**: Up to 100 concurrent users, 1000 tasks per user
+
+## Neon DB Migration Plan
+
+### Overview
+Migrate from SQLite (development) to Neon DB (production) for enhanced scalability, reliability, and multi-user support. The application is already configured to work with PostgreSQL/Neon DB through conditional connection logic in session.py.
+
+### Migration Strategy
+1. **Setup Neon DB Instance**: Create new Neon DB project and database
+2. **Configure Connection**: Update environment variables with Neon DB connection string
+3. **Connection Handling**: Leverage existing SSL configuration logic in session.py which automatically adds sslmode=require for PostgreSQL connections
+4. **Environment Configuration**: Update .env files for development and production
+5. **Testing**: Verify all database operations work with Neon DB
+6. **Deployment**: Deploy to production with Neon DB connection
+
+### Database Schema Compatibility
+- Current SQLModel entities are compatible with PostgreSQL/Neon DB
+- The session.py already handles PostgreSQL connection parameters correctly
+- Foreign key constraints and indexes will be properly handled by SQLModel
+- No schema changes required as SQLModel abstracts database differences
+
+### SSL and Security Configuration
+- The existing session.py automatically appends sslmode=require for PostgreSQL connections
+- This ensures secure connections to Neon DB
+- No additional SSL configuration needed in application code
+
+### Migration Steps Checklist
+- [ ] Create Neon DB account and project
+- [ ] Obtain connection string from Neon DB dashboard
+- [ ] Update DATABASE_URL in .env with Neon DB connection string
+- [ ] Test connection locally
+- [ ] Run existing tests to verify functionality
+- [ ] Deploy to staging/production environment
 
 ## Constitution Check
 

@@ -9,7 +9,7 @@ from src.adapters.db.session import get_session
 from src.domain.entities.user import User
 
 # Default secrets for development - should be overridden in .env
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-key-for-dev")
+SECRET_KEY = os.getenv("SECRET_KEY", "your-super-secret-key-for-dev")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
