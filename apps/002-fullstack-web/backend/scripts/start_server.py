@@ -1,9 +1,13 @@
 import os
+import sys
 
 import uvicorn
 
 
 def main() -> None:
+    # Add the current directory to Python path to resolve modules
+    sys.path.insert(0, ".")
+
     # Get the port from environment variable, default to 8000 if not set
     port_str: str = os.environ.get("PORT", "8000")
 
