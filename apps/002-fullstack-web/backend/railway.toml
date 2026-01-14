@@ -2,7 +2,7 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "uvicorn src.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "python scripts/start_server.py"
 restartOnDeploy = true
 numReplicas = 1
 sleepApplication = false

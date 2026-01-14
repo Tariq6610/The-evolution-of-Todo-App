@@ -1,17 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.adapters.db.session import init_db
+
+from src.adapters.api import auth_routes, task_routes  # type: ignore
+from src.adapters.db.session import init_db  # type: ignore
 
 app = FastAPI(
     title="Todo Evolution API",
     description="Full-stack Todo application backend for Phase II",
-    version="0.1.0"
+    version="0.1.0",
 )
 
 # Configure CORS
 # Note: When using credentials (cookies), origins must be specific, not "*"
-ALLOWED_ORIGINS = [
-    "http://localhost:3000",    # Next.js frontend
+ALLOWED_ORIGINS: list[str] = [
+    "http://localhost:3000",  # Next.js frontend
     "http://127.0.0.1:3000",
 ]
 
@@ -23,19 +25,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
-def on_startup():
+def on_startup() -> None:
     init_db()
 
+
 @app.get("/health")
-def health_check():
+def health_check() -> dict[str, str]:
     return {"status": "healthy", "version": "0.1.0"}
 
-# Import and include routers here as they are implemented
-from src.adapters.api import auth_routes, task_routes
-app.include_router(auth_routes.router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(task_routes.router, prefix="/api/v1/tasks", tags=["tasks"])
 
 if __name__ == "__main__":
+    import os
+
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+    # Get the port from environment variable, default to 8000 if not set
+    port_str: str = os.environ.get("PORT", "8000")
+    try:
+        port: int = int(port_str)
+    except ValueError:
+        print(f"Invalid PORT value: '{port_str}'. Using default port 8000.")
+        port = 8000
+
+    uvicorn.run("src.main:app", host="0.0.0.0", port=port, reload=False)
+
+
+app.include_router(auth_routes.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(task_routes.router, prefix="/api/v1/tasks", tags=["tasks"])
