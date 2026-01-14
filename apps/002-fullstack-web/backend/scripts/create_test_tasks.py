@@ -25,7 +25,7 @@ async def create_test_tasks():
     init_db()
 
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    user_email = "admin@gmail.com"
+    user_email = "tariq@gmail.com"
 
     with Session(engine) as session:
         # Check if user exists
@@ -45,30 +45,30 @@ async def create_test_tasks():
                 session.delete(task)
             session.commit()
 
-        # Create test tasks
+        # Create test tasks - using uppercase priority and status to match enum values
         test_tasks = [
             # High priority tasks
             TaskTable(
                 title="Complete project proposal",
                 description="Write and submit the quarterly project proposal with budget estimates",
-                priority="high",
-                status="pending",
+                priority="HIGH",
+                status="PENDING",
                 tags="work,important,q1",
                 user_id=user.id
             ),
             TaskTable(
                 title="Review security audit",
                 description="Review the security audit report and address critical vulnerabilities",
-                priority="high",
-                status="pending",
+                priority="HIGH",
+                status="PENDING",
                 tags="security,urgent",
                 user_id=user.id
             ),
             TaskTable(
                 title="Client meeting preparation",
                 description="Prepare presentation for Monday's client meeting",
-                priority="high",
-                status="completed",
+                priority="HIGH",
+                status="COMPLETED",
                 tags="client,presentation",
                 user_id=user.id
             ),
@@ -77,32 +77,32 @@ async def create_test_tasks():
             TaskTable(
                 title="Update documentation",
                 description="Update API documentation with new endpoints",
-                priority="medium",
-                status="pending",
+                priority="MEDIUM",
+                status="PENDING",
                 tags="docs,api",
                 user_id=user.id
             ),
             TaskTable(
                 title="Code review for PR #42",
                 description="Review the new feature pull request",
-                priority="medium",
-                status="pending",
+                priority="MEDIUM",
+                status="PENDING",
                 tags="code-review,backend",
                 user_id=user.id
             ),
             TaskTable(
                 title="Write unit tests",
                 description="Add unit tests for the new authentication module",
-                priority="medium",
-                status="completed",
+                priority="MEDIUM",
+                status="COMPLETED",
                 tags="testing,auth",
                 user_id=user.id
             ),
             TaskTable(
                 title="Update dependencies",
                 description="Update npm packages to latest versions",
-                priority="medium",
-                status="pending",
+                priority="MEDIUM",
+                status="PENDING",
                 tags="maintenance,frontend",
                 user_id=user.id
             ),
@@ -111,32 +111,32 @@ async def create_test_tasks():
             TaskTable(
                 title="Clean up old logs",
                 description="Archive and remove logs older than 30 days",
-                priority="low",
-                status="pending",
+                priority="LOW",
+                status="PENDING",
                 tags="maintenance,devops",
                 user_id=user.id
             ),
             TaskTable(
                 title="Add comments to legacy code",
                 description="Add documentation comments to the payment processing module",
-                priority="low",
-                status="completed",
+                priority="LOW",
+                status="COMPLETED",
                 tags="docs,legacy",
                 user_id=user.id
             ),
             TaskTable(
                 title="Organize desktop files",
                 description="Clean up and organize files on development machine",
-                priority="low",
-                status="pending",
+                priority="LOW",
+                status="PENDING",
                 tags="personal,organization",
                 user_id=user.id
             ),
             TaskTable(
                 title="Update email signature",
                 description="Update email signature with new title and contact info",
-                priority="low",
-                status="pending",
+                priority="LOW",
+                status="PENDING",
                 tags="personal,admin",
                 user_id=user.id
             ),
@@ -145,32 +145,32 @@ async def create_test_tasks():
             TaskTable(
                 title="Learn new framework",
                 description="Complete the online course on Rust programming",
-                priority="medium",
-                status="pending",
+                priority="MEDIUM",
+                status="PENDING",
                 tags="learning,rust",
                 user_id=user.id
             ),
             TaskTable(
                 title="Backup database",
                 description="Create a full backup of the production database",
-                priority="high",
-                status="completed",
+                priority="HIGH",
+                status="COMPLETED",
                 tags="backup,devops,critical",
                 user_id=user.id
             ),
             TaskTable(
                 title="Team lunch planning",
                 description="Coordinate with team for this month's team building lunch",
-                priority="low",
-                status="pending",
+                priority="LOW",
+                status="PENDING",
                 tags="team,social",
                 user_id=user.id
             ),
             TaskTable(
                 title="Performance optimization",
                 description="Optimize database queries causing slow page loads",
-                priority="medium",
-                status="pending",
+                priority="MEDIUM",
+                status="PENDING",
                 tags="performance,database",
                 user_id=user.id
             ),

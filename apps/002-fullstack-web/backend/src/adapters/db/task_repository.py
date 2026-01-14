@@ -24,13 +24,25 @@ class TaskTable(SQLModel, table=True):
     user_id: str = Field(sa_column_kwargs={"nullable": False})  # Foreign key to users table
 
     def to_domain(self) -> DomainTask:
+        # Handle tags: split comma-separated string, but return empty list if empty or just whitespace
+        if self.tags:
+            # Split and strip whitespace from each tag, filter out empty strings
+            tags_list = [tag.strip() for tag in self.tags.split(",")]
+            tags_list = [tag for tag in tags_list if tag]  # Remove empty strings
+        else:
+            tags_list = []
+
+        # Handle status and priority: convert to lowercase to match enum values
+        status_value = self.status.lower() if self.status else "pending"
+        priority_value = self.priority.lower() if self.priority else "medium"
+
         return DomainTask(
             id=self.id,
             title=self.title,
             description=self.description,
-            status=TaskStatus(self.status),  # Use as-is (lowercase)
-            priority=Priority(self.priority),  # Use as-is (lowercase)
-            tags=self.tags.split(",") if self.tags else [],
+            status=TaskStatus(status_value),
+            priority=Priority(priority_value),
+            tags=tags_list,
             created_at=self.created_at,
             updated_at=self.updated_at
         )
@@ -103,7 +115,7 @@ class SQLModelTaskRepository(StoragePort):
         if search:
             statement = statement.where(
                 (TaskTable.title.contains(search))
-                | (TaskTable.description.contains(search))
+                | (TaskTable.description.is_not(None) & TaskTable.description.contains(search))
             )
 
         if status:
