@@ -69,7 +69,7 @@ The application follows Hexagonal Architecture (Ports and Adapters pattern):
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+
-- PostgreSQL (or Neon DB account)
+- Neon DB account (recommended) or PostgreSQL
 
 ### Backend Setup
 1. Navigate to the backend directory:
@@ -126,10 +126,19 @@ The application follows Hexagonal Architecture (Ports and Adapters pattern):
 ### Backend (.env)
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/todo_db
+# For Neon DB, use the connection string from your Neon dashboard:
+# DATABASE_URL=postgresql://username:password@ep-xxx.us-east-1.aws.neon.tech/dbname?sslmode=require
 JWT_SECRET_KEY=your-super-secret-jwt-key
 JWT_ALGORITHM=HS256
 JWT_EXPIRATION_MINUTES=30
 ```
+
+### Neon DB Setup
+1. Create a free Neon account at [neon.tech](https://neon.tech)
+2. Create a new project in the Neon dashboard
+3. Copy the connection string from the "Connection Details" section
+4. Update your `.env` file with the Neon DB connection string
+5. The application automatically handles SSL requirements for Neon DB connections
 
 ### Frontend (.env)
 ```

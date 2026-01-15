@@ -1,219 +1,459 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import apiClient from '@/services/api_client';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import {
+  Plus,
+  ListTodo,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  LogOut,
+  ChevronRight,
+  BarChart3,
+} from "lucide-react";
+import apiClient from "@/services/api_client";
+import { Sidebar } from "@/components/layout/Sidebar";
+import TaskForm from "@/components/tasks/TaskForm";
+import { useAuth } from "@/context/auth_context";
+
+// Dashboard components
+import HeroSummary from "@/components/dashboard/HeroSummary";
+import StatsCard from "@/components/dashboard/StatsCard";
+import TaskStatusChart from "@/components/dashboard/TaskStatusChart";
+import PriorityChart from "@/components/dashboard/PriorityChart";
+import AttentionPanel from "@/components/dashboard/AttentionPanel";
+import QuickActions from "@/components/dashboard/QuickActions";
+import SmartInsight, {
+  generateInsight,
+} from "@/components/dashboard/SmartInsight";
 
 interface Task {
   id: string;
   title: string;
   description: string | null;
-  status: string; // PENDING or COMPLETED
-  priority: string; // LOW, MEDIUM, HIGH
+  status: string;
+  priority: string;
   tags: string[];
   created_at: string;
   updated_at: string;
 }
 
+interface User {
+  name?: string;
+  email?: string;
+}
+
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTask, setNewTask] = useState({ title: '', description: '', priority: 'MEDIUM' });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [formPriority, setFormPriority] = useState<
+    "low" | "medium" | "high" | null
+  >(null);
   const router = useRouter();
+  const { user, loading: authLoading, logout } = useAuth();
 
-  // Check if user is authenticated
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      router.push('/login');
-      return;
+    console.log(
+      "[DEBUG] Dashboard - useEffect running, authLoading:",
+      authLoading,
+      "user:",
+      user,
+    );
+    // Wait for auth context to finish loading and check if user is authenticated
+    if (!authLoading) {
+      console.log(
+        "[DEBUG] Dashboard - auth finished loading, user is:",
+        user ? "authenticated" : "not authenticated",
+      );
+      if (!user) {
+        console.log("[DEBUG] Dashboard - No user, redirecting to login");
+        // User is not authenticated, redirect to login
+        router.push("/login");
+        return;
+      }
+      console.log("[DEBUG] Dashboard - User authenticated, fetching data");
+      // User is authenticated, fetch dashboard data
+      fetchData();
     }
-    fetchTasks();
-  }, []);
+  }, [user, authLoading]);
 
-  const fetchTasks = async () => {
+  const fetchData = async () => {
+    console.log("[DEBUG] fetchData - starting");
     try {
-      const response = await apiClient.get('/tasks');
-      setTasks(response.data);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch tasks');
+      // Fetch tasks
+      console.log("[DEBUG] fetchData - calling /tasks");
+      const tasksResponse = await apiClient.get("/tasks", {
+        withCredentials: true,
+        params: { sort_by: "created_at" },
+      });
+      console.log(
+        "[DEBUG] fetchData - /tasks success, count:",
+        tasksResponse.data.length,
+      );
+      setTasks(tasksResponse.data);
+    } catch (err: unknown) {
+      const error = err as {
+        message?: string;
+        response?: { status?: number; data?: { detail?: string } };
+      };
+      console.log(
+        "[DEBUG] fetchData - error:",
+        error.message,
+        error.response?.status,
+      );
+      // If auth fails, redirect to login
+      if (error.response?.status === 401) {
+        console.log("[DEBUG] fetchData - 401 error, redirecting to login");
+        router.push("/login");
+        return;
+      }
+      setError(error.response?.data?.detail || "Failed to fetch data");
     } finally {
+      console.log("[DEBUG] fetchData - setting loading to false");
       setLoading(false);
     }
   };
 
-  const handleAddTask = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddTask = async (data: {
+    title: string;
+    description?: string;
+    priority: "low" | "medium" | "high";
+    tags?: string;
+  }) => {
     try {
-      const response = await apiClient.post('/tasks', newTask);
-      setTasks([...tasks, response.data]);
-      setNewTask({ title: '', description: '', priority: 'MEDIUM' });
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to add task');
-    }
-  };
+      const tagsArray = data.tags
+        ? data.tags
+            .split(",")
+            .map((tag: string) => tag.trim())
+            .filter((tag: string) => tag.length > 0)
+        : [];
 
-  const toggleTaskStatus = async (taskId: string) => {
-    try {
-      const response = await apiClient.patch(`/tasks/${taskId}/toggle-status`);
-      setTasks(tasks.map(task =>
-        task.id === taskId ? response.data : task
-      ));
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to update task');
-    }
-  };
-
-  const deleteTask = async (taskId: string) => {
-    try {
-      await apiClient.delete(`/tasks/${taskId}`);
-      setTasks(tasks.filter(task => task.id !== taskId));
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete task');
+      const response = await apiClient.post("/tasks", {
+        title: data.title,
+        description: data.description || null,
+        priority: data.priority,
+        tags: tagsArray,
+      });
+      setTasks([response.data, ...tasks]);
+      setShowAddForm(false);
+      setFormPriority(null);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
+      setError(error.response?.data?.detail || "Failed to add task");
+      throw err;
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    router.push('/login');
+    logout();
   };
 
-  if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  if (authLoading || loading) {
+    return (
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Sidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+            className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate statistics
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter((t) => t.status === "completed").length;
+  const pendingTasks = totalTasks - completedTasks;
+  const highPriorityTasks = tasks.filter(
+    (t) => t.priority === "high" && t.status !== "completed",
+  ).length;
+  const mediumPriorityTasks = tasks.filter(
+    (t) => t.priority === "medium" && t.status !== "completed",
+  ).length;
+  const lowPriorityTasks = tasks.filter(
+    (t) => t.priority === "low" && t.status !== "completed",
+  ).length;
+
+  // Get high priority and recent tasks for attention panel
+  const highPriority = tasks.filter(
+    (t) => t.priority === "high" && t.status !== "completed",
+  );
+  const recentTasks = tasks.slice(0, 5);
+
+  // Generate smart insight\
+  const insight = generateInsight(
+    completedTasks,
+    totalTasks,
+    highPriorityTasks,
+    mediumPriorityTasks,
+    lowPriorityTasks,
+  );
+
+  const userName = user?.name || user?.email?.split("@")[0] || "there";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Todo Dashboard</h1>
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Sidebar />
 
-      <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        {error && (
-          <div className="mb-4 rounded-md bg-red-50 p-4">
-            <div className="text-sm text-red-700">{error}</div>
-          </div>
-        )}
-
-        <div className="mb-8 bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Add New Task</h2>
-          <form onSubmit={handleAddTask} className="space-y-4">
+      <div className="flex-1 lg:ml-20 lg:w-[calc(100%-5rem)] xl:ml-64 xl:w-[calc(100%-16rem)] flex flex-col min-h-screen transition-all duration-300">
+        {/* Header */}
+        <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-30">
+          <div className="px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Title *
-              </label>
-              <input
-                type="text"
-                id="title"
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                value={newTask.title}
-                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-              />
-            </div>
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <textarea
-                id="description"
-                rows={3}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                value={newTask.description}
-                onChange={(e) => setNewTask({...newTask, description: e.target.value})}
-              />
-            </div>
-            <div>
-              <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
-                Priority
-              </label>
-              <select
-                id="priority"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                value={newTask.priority}
-                onChange={(e) => setNewTask({...newTask, priority: e.target.value})}
+              <motion.h1
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-2xl font-bold text-gray-900 dark:text-white"
               >
-                <option value="LOW">Low</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HIGH">High</option>
-              </select>
+                Dashboard
+              </motion.h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Welcome back, {userName}
+              </p>
             </div>
-            <button
-              type="submit"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Add Task
-            </button>
-          </form>
-        </div>
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              >
+                <LogOut size={18} />
+                <span className="hidden sm:inline">Logout</span>
+              </motion.button>
+            </div>
+          </div>
+        </header>
 
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:px-6">
-            <h2 className="text-xl font-semibold text-gray-800">Your Tasks</h2>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+            >
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            </motion.div>
+          )}
+
+          {/* Hero Summary */}
+          <div className="mb-6">
+            <HeroSummary
+              userName={userName}
+              completedTasks={completedTasks}
+              totalTasks={totalTasks}
+              onAddTask={() => {
+                setFormPriority(null);
+                setShowAddForm(true);
+              }}
+            />
           </div>
-          <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-            {tasks.length === 0 ? (
-              <div className="p-6 text-center">
-                <p className="text-gray-500">No tasks yet. Add your first task above!</p>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Stats and Charts */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Stats Cards Row */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard
+                  title="Total Tasks"
+                  value={totalTasks}
+                  icon={<ListTodo className="w-5 h-5" />}
+                  color="blue"
+                  delay={0}
+                />
+                <StatsCard
+                  title="Completed"
+                  value={completedTasks}
+                  icon={<CheckCircle className="w-5 h-5" />}
+                  color="green"
+                  delay={0.1}
+                />
+                <StatsCard
+                  title="Pending"
+                  value={pendingTasks}
+                  icon={<Clock className="w-5 h-5" />}
+                  color="yellow"
+                  delay={0.2}
+                />
+                <StatsCard
+                  title="High Priority"
+                  value={highPriorityTasks}
+                  icon={<AlertCircle className="w-5 h-5" />}
+                  color="red"
+                  delay={0.3}
+                />
               </div>
-            ) : (
-              <ul className="divide-y divide-gray-200">
-                {tasks.map((task) => (
-                  <li key={task.id} className="py-4 sm:py-5 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={task.status === 'COMPLETED'}
-                          onChange={() => toggleTaskStatus(task.id)}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        />
-                        <div className="ml-3">
-                          <p className={`text-sm font-medium ${task.status === 'COMPLETED' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                            {task.title}
-                          </p>
-                          {task.description && (
-                            <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-                          )}
-                          <div className="mt-1 flex items-center space-x-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                              task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {task.priority}
-                            </span>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              task.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {task.status}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => deleteTask(task.id)}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+
+              {/* Charts Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <TaskStatusChart
+                  completed={completedTasks}
+                  pending={pendingTasks}
+                />
+                <PriorityChart
+                  high={highPriorityTasks}
+                  medium={mediumPriorityTasks}
+                  low={lowPriorityTasks}
+                />
+              </div>
+
+              {/* Quick Actions */}
+              <QuickActions
+                onAddTask={() => {
+                  setFormPriority(null);
+                  setShowAddForm(true);
+                }}
+                onAddHighPriority={() => {
+                  setFormPriority("high");
+                  setShowAddForm(true);
+                }}
+                onNavigateToTasks={() => router.push("/dashboard/tasks")}
+                onAddScheduled={() => {
+                  setFormPriority(null);
+                  setShowAddForm(true);
+                }}
+              />
+            </div>
+
+            {/* Right Column - Attention Panel and Insights */}
+            <div className="space-y-6">
+              {/* Attention Panel */}
+              <AttentionPanel
+                highPriorityTasks={highPriority}
+                recentTasks={recentTasks}
+                onViewAll={() => router.push("/dashboard/tasks")}
+              />
+
+              {/* Smart Insight */}
+              <SmartInsight
+                insight={insight.insight}
+                subtitle={insight.subtitle}
+              />
+            </div>
           </div>
-        </div>
-      </main>
+
+          {/* View All Tasks Link */}
+          {totalTasks > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="mt-8"
+            >
+              <motion.button
+                whileHover={{ scale: 1.02, x: 5 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => router.push("/dashboard/tasks")}
+                className="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      View All Tasks
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {totalTasks} {totalTasks === 1 ? "task" : "tasks"} in your
+                      list
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </motion.button>
+            </motion.div>
+          )}
+
+          {/* Empty State */}
+          {totalTasks === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-8 p-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-center"
+            >
+              <div className="max-w-md mx-auto">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4">
+                  <Plus className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Start Your Productivity Journey
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                  Create your first task and start tracking your progress. Your
+                  dashboard will fill up with insights as you add more tasks.
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setFormPriority(null);
+                    setShowAddForm(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  <Plus size={20} />
+                  Create Your First Task
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </main>
+      </div>
+
+      {/* Add Task Modal */}
+      {showAddForm && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowAddForm(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full overflow-hidden"
+          >
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Add New Task
+              </h2>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowAddForm(false)}
+                className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
+              >
+                ✕
+              </motion.button>
+            </div>
+            <div className="p-6">
+              <TaskForm
+                initialData={
+                  formPriority ? { priority: formPriority } : undefined
+                }
+                onSubmit={handleAddTask}
+                onCancel={() => {
+                  setShowAddForm(false);
+                  setFormPriority(null);
+                }}
+              />
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }
