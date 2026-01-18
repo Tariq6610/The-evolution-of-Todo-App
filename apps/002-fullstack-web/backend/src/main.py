@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,7 +18,14 @@ ALLOWED_ORIGINS: list[str] = [
     "http://localhost:3000",  # Next.js frontend
     "http://127.0.0.1:3000",
     "https://the-evolution-of-todo-app-production.up.railway.app",  # Deployed frontend
+    "https://frontend-orpin-seven-86.vercel.app",  # Vercel deployed frontend
 ]
+
+# Add origins from environment variable if provided (comma-separated)
+extra_origins_str = os.getenv("CORS_EXTRA_ORIGINS")
+if extra_origins_str:
+    extra_origins = [origin.strip() for origin in extra_origins_str.split(",")]
+    ALLOWED_ORIGINS.extend(extra_origins)
 
 app.add_middleware(
     CORSMiddleware,
