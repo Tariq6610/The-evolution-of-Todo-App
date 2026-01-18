@@ -1,5 +1,5 @@
 {
-  "buildCommand": "NEXT_SHOULD_USE_TURBOPACK=0 npm run build",
+  "buildCommand": "npm run build --webpack",
   "devCommand": "npx next dev",
   "installCommand": "npm install",
   "framework": "nextjs"
