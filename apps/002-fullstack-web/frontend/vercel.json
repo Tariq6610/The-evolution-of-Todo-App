@@ -1,7 +1,6 @@
 {
-  "buildCommand": "npx next build",
+  "buildCommand": "NEXT_USE_TURBOPACK=0 npm run build",
   "devCommand": "npx next dev",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "outputDirectory": ".next"
+  "framework": "nextjs"
 }
