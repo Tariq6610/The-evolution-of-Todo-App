@@ -18,7 +18,8 @@ ALLOWED_ORIGINS: list[str] = [
     "http://localhost:3000",  # Next.js frontend
     "http://127.0.0.1:3000",
     "https://the-evolution-of-todo-app-production.up.railway.app",  # Deployed frontend
-    "https://frontend-orpin-seven-86.vercel.app",  # Vercel deployed frontend
+    "https://frontend-orpin-seven-86.vercel.app",
+    "https://frontend-5tyjdqoxd-tariq-syeds-projects.vercel.app",  # Vercel frontend
 ]
 
 # Add origins from environment variable if provided (comma-separated)
