@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
+# type: ignore
 """
 Script to create a test user for the dashboard.
 Run from the backend directory: python scripts/create_test_user.py
 """
 
-import asyncio
-import sys
 import os
+import sys
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlmodel import Session, select
-from passlib.context import CryptContext
+
 from src.adapters.db.session import engine, init_db
-from src.domain.entities.user import User
 from src.adapters.db.user_repository import SQLUserRepository
+from src.adapters.security.password import get_password_hash
+from src.domain.entities.user import User
 
 
 def create_test_user():
@@ -24,7 +25,6 @@ def create_test_user():
     # Create tables if they don't exist
     init_db()
 
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     user_email = "tariq3@gmail.com"
 
     with Session(engine) as session:
@@ -36,11 +36,11 @@ def create_test_user():
             return user
 
         # Create user
-        hashed_password = pwd_context.hash("testpassword123")
+        hashed_password = get_password_hash("testpassword123")
         new_user = User(
             email=user_email,
             full_name="Tariq Test User",
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
         )
 
         user_repo = SQLUserRepository(session)
