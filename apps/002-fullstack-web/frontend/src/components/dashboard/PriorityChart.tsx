@@ -101,7 +101,10 @@ export default function PriorityChart({
                 borderRadius: "8px",
                 boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
               }}
-              formatter={(value: number) => [`${value} tasks`, ""]}
+              formatter={(value: number | undefined) => [
+                `${value ?? 0} tasks`,
+                "",
+              ]}
             />
             <Bar dataKey="value" radius={[6, 6, 0, 0]} animationDuration={1000}>
               {data.map((entry, index) => (

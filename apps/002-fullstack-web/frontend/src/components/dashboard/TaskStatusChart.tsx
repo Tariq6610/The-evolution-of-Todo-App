@@ -13,6 +13,7 @@ interface ChartData {
   name: string;
   value: number;
   color: string;
+  [key: string]: string | number;
 }
 
 export default function TaskStatusChart({
@@ -83,7 +84,10 @@ export default function TaskStatusChart({
                 borderRadius: "8px",
                 boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
               }}
-              formatter={(value: number) => [`${value} tasks`, ""]}
+              formatter={(value: number | undefined) => [
+                `${value ?? 0} tasks`,
+                "",
+              ]}
             />
           </PieChart>
         </ResponsiveContainer>

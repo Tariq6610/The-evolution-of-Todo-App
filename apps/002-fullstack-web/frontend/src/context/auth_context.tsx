@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import apiClient from "@/services/api_client";
 
 interface AuthContextType {
-  user: { id?: string; email?: string; name?: string } | null;
+  user: { id?: string; email?: string; name?: string; bio?: string } | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     id?: string;
     email?: string;
     name?: string;
+    bio?: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
