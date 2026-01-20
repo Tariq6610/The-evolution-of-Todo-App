@@ -18,8 +18,7 @@ ALLOWED_ORIGINS: list[str] = [
     "http://localhost:3000",  # Next.js frontend
     "http://127.0.0.1:3000",
     "https://the-evolution-of-todo-app-production.up.railway.app",  # Deployed frontend
-    "https://frontend-orpin-seven-86.vercel.app",
-    "https://frontend-5tyjdqoxd-tariq-syeds-projects.vercel.app",  # Vercel frontend
+    "https://frontend-orpin-seven-86.vercel.app",  # Vercel frontend
 ]
 
 # Add origins from environment variable if provided (comma-separated)
@@ -33,7 +32,20 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,  # Allow cookies and credentials
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=[
+        "Access-Control-Allow-Origin",
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "X-CSRFToken",
+    ],
+    # Expose the headers that frontend can access
+    expose_headers=[
+        "Access-Control-Allow-Origin",
+        "Content-Type",
+        "Authorization",
+        "Set-Cookie",
+    ],
 )
 
 
