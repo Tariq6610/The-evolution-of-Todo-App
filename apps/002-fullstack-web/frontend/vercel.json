@@ -2,5 +2,6 @@
   "buildCommand": "npm run build",
   "devCommand": "npx next dev",
   "installCommand": "npm install",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "root": "apps/002-fullstack-web/frontend"
 }

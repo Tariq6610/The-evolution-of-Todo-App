@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     // Add any packages that need to be transpiled
   ],
+  // Specify the root directory to resolve the multiple lockfiles warning
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default nextConfig;
