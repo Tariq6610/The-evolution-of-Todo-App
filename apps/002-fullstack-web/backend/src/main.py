@@ -1,10 +1,34 @@
 import os
+from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 from src.adapters.api import auth_routes, task_routes  # type: ignore
 from src.adapters.db.session import init_db  # type: ignore
+
+
+class ProxyHeadersMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware to handle proxy headers from Railway and other reverse proxies.
+    Ensures that HTTPS protocol is preserved in redirects and URL generation.
+    """
+
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        # Check for forwarded headers from Railway proxy
+        forwarded_proto = request.headers.get("x-forwarded-proto", "")
+        if forwarded_proto.lower() == "https":
+            # Update the request's URL scheme to reflect HTTPS
+            request.scope["scheme"] = "https"
+
+        response = await call_next(request)
+        return response
+
 
 app = FastAPI(
     title="Todo Evolution API",
@@ -47,6 +71,9 @@ app.add_middleware(
         "Set-Cookie",
     ],
 )
+
+# Add proxy headers middleware to handle HTTPS redirects properly behind Railway proxy
+app.add_middleware(ProxyHeadersMiddleware)
 
 
 @app.on_event("startup")
