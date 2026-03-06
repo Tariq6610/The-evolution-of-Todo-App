@@ -1,14 +1,13 @@
 """Integration tests for authentication endpoints."""
 
 import pytest
+from collections.abc import Generator
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
-from src.main import app
-from src.domain.entities.user import User
 from src.adapters.db.session import get_session
-
+from src.main import app
 
 # Test database setup
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -20,7 +19,7 @@ engine = create_engine(
 
 
 @pytest.fixture
-def session():
+def session() -> Generator[Session, None, None]:
     """Create a test database session."""
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
@@ -29,9 +28,10 @@ def session():
 
 
 @pytest.fixture
-def client(session):
+def client(session: Session) -> Generator[TestClient, None, None]:
     """Create a test client with a test database session."""
-    def override_get_session():
+
+    def override_get_session() -> Generator[Session, None, None]:
         yield session
 
     app.dependency_overrides[get_session] = override_get_session

@@ -1,5 +1,6 @@
+from typing import Any
+
 from sqlmodel import Session, select
-from typing import Optional
 
 from src.domain.entities.user import User
 from src.domain.ports.user_repository_port import UserRepositoryPort
@@ -17,15 +18,15 @@ class SQLUserRepository(UserRepositoryPort):
         self.session.refresh(user)
         return user
 
-    def get_by_id(self, user_id: str) -> Optional[User]:
+    def get_by_id(self, user_id: str) -> User | None:
         statement = select(User).where(User.id == user_id)
         return self.session.exec(statement).first()
 
-    def get_by_email(self, email: str) -> Optional[User]:
+    def get_by_email(self, email: str) -> User | None:
         statement = select(User).where(User.email == email)
         return self.session.exec(statement).first()
 
-    def update(self, user_id: str, user_data: dict) -> User:
+    def update(self, user_id: str, user_data: dict[str, Any]) -> User:
         user = self.get_by_id(user_id)
         if not user:
             raise ValueError(f"User with ID {user_id} not found")

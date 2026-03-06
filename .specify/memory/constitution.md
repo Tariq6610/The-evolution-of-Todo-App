@@ -25,7 +25,7 @@ The project evolves through distinct phases, each maintained as a self-contained
 |-------|-------------|-------|-----------|
 | **I** | In-Memory Python Console App | Python, pytest | `apps/001-console-todo/` |
 | **II** | Full-Stack Web Application | Next.js, FastAPI, SQLModel, Neon DB | `apps/002-fullstack-web/` |
-| **III** | AI-Powered Todo Chatbot | OpenAI ChatKit, Agents SDK | `apps/003-ai-chatbot/` |
+| **III** | AI-Powered Todo Chatbot | OpenAI ChatKit, Agents SDK | `apps/c` |
 | **IV** | Local Kubernetes Deployment | Docker, Helm, kubectl-ai | `apps/004-kubernetes/` |
 | **V** | Advanced Cloud Deployment | Kafka, Dapr, DOKS | `apps/005-cloud-deployment/` |
 

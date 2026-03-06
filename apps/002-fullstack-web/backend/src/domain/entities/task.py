@@ -3,9 +3,11 @@
 This entity is shared across all phases and forms the core domain model.
 Uses Pydantic for validation and serialization.
 """
+
 from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field, field_validator
+
 from src.domain.entities.priority import Priority
 from src.domain.entities.task_status import TaskStatus
 
@@ -27,17 +29,12 @@ class Task(BaseModel):
         created_at: Timestamp when task was created
         updated_at: Timestamp when task was last modified
     """
+
     id: str = Field(..., description="Unique task identifier (UUID)")
     title: str = Field(..., min_length=1, description="Task title (required)")
-    description: str | None = Field(
-        None, description="Optional detailed description"
-    )
-    status: TaskStatus = Field(
-        default=TaskStatus.PENDING, description="Completion status"
-    )
-    priority: Priority = Field(
-        default=Priority.MEDIUM, description="Priority level"
-    )
+    description: str | None = Field(None, description="Optional detailed description")
+    status: TaskStatus = Field(default=TaskStatus.PENDING, description="Completion status")
+    priority: Priority = Field(default=Priority.MEDIUM, description="Priority level")
     tags: list[str] = Field(default_factory=list, description="Category/label list")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),

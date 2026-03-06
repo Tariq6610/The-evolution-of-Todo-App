@@ -1,20 +1,17 @@
-# Use the Python 3 official image
 FROM python:3.11-slim
 
-# Run in unbuffered mode
 ENV PYTHONUNBUFFERED=1
 
-# Create and change to the app directory
 WORKDIR /app
 
-# Copy local code to the container image
-COPY . ./
-
-# Install project dependencies
+# Install dependencies first (better caching)
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port that the app runs on
-EXPOSE ${PORT:-8000}
+# Copy the rest of the code
+COPY . .
 
-# Run the web service on container startup
+# Hugging Face ONLY exposes 7860
+EXPOSE 7860
+
 CMD ["sh", "-c", "python scripts/start_server.py"]

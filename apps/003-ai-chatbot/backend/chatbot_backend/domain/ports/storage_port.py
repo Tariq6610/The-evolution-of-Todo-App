@@ -1,0 +1,191 @@
+"""StoragePort interface for task persistence.
+
+This port defines the contract for task storage adapters.
+Following Hexagonal Architecture - adapters implement this interface.
+"""
+
+from abc import ABC, abstractmethod
+
+from chatbot_backend.domain.entities.task import Task
+
+
+class StoragePort(ABC):
+    """
+    Abstract interface for task storage.
+
+    This port defines the contract that storage adapters must implement.
+    Enables swapping storage implementations (in-memory, database, etc.)
+    without affecting domain logic.
+    """
+
+    @abstractmethod
+    def save(self, task: Task) -> Task:
+        """
+        Save a new task and return it with generated ID.
+
+        Args:
+            task: Task to save (may have placeholder ID)
+
+        Returns:
+            Task with generated unique ID
+
+        Raises:
+            ValueError: If task validation fails
+        """
+        pass
+
+    @abstractmethod
+    def get(self, task_id: str) -> Task | None:
+        """
+        Retrieve a task by ID.
+
+        Args:
+            task_id: Unique task identifier
+
+        Returns:
+            Task if found, None otherwise
+        """
+        pass
+
+    @abstractmethod
+    def get_all(
+        self,
+        search: str | None = None,
+        status: str | None = None,
+        priority: str | None = None,
+        tag: str | None = None,
+        sort_by: str | None = None,
+    ) -> list[Task]:
+        """
+        Retrieve all tasks with optional filtering.
+
+        Args:
+            search: Optional search term
+            status: Optional status filter
+            priority: Optional priority filter
+            tag: Optional tag filter
+            sort_by: Optional sort field
+
+        Returns:
+            List of filtered tasks
+        """
+        pass
+
+    @abstractmethod
+    def save_for_user(self, task: Task, user_id: str) -> Task:
+        """
+        Save a new task for a specific user.
+
+        Args:
+            task: Task to save (may have placeholder ID)
+            user_id: ID of the user to save the task for
+
+        Returns:
+            Task with generated unique ID
+
+        Raises:
+            ValueError: If task validation fails
+        """
+        pass
+
+    @abstractmethod
+    def get_all_for_user(self, user_id: str) -> list[Task]:
+        """
+        Retrieve all tasks for a specific user.
+
+        Args:
+            user_id: ID of the user whose tasks to retrieve
+
+        Returns:
+            List of tasks for the specified user (empty list if none exist)
+        """
+        pass
+
+    @abstractmethod
+    def update(self, task_id: str, task: Task) -> Task:
+        """
+        Update an existing task.
+
+        Args:
+            task_id: ID of task to update
+            task: Updated task data
+
+        Returns:
+            Updated task
+
+        Raises:
+            ValueError: If task_id not found
+        """
+        pass
+
+    @abstractmethod
+    def update_for_user(self, task_id: str, task: Task, user_id: str) -> Task:
+        """
+        Update an existing task for a specific user.
+
+        Args:
+            task_id: ID of task to update
+            task: Updated task data
+            user_id: ID of the user updating the task
+
+        Returns:
+            Updated task
+
+        Raises:
+            ValueError: If task_id not found or task doesn't belong to user
+        """
+        pass
+
+    @abstractmethod
+    def delete(self, task_id: str) -> None:
+        """
+        Delete a task by ID.
+
+        Args:
+            task_id: ID of task to delete
+
+        Raises:
+            ValueError: If task_id not found
+        """
+        pass
+
+    @abstractmethod
+    def delete_for_user(self, task_id: str, user_id: str) -> None:
+        """
+        Delete a task by ID for a specific user.
+
+        Args:
+            task_id: ID of task to delete
+            user_id: ID of the user deleting the task
+
+        Raises:
+            ValueError: If task_id not found or task doesn't belong to user
+        """
+        pass
+
+    @abstractmethod
+    def exists(self, task_id: str) -> bool:
+        """
+        Check if a task exists.
+
+        Args:
+            task_id: ID of task to check
+
+        Returns:
+            True if task exists, False otherwise
+        """
+        pass
+
+    @abstractmethod
+    def exists_for_user(self, task_id: str, user_id: str) -> bool:
+        """
+        Check if a task exists for a specific user.
+
+        Args:
+            task_id: ID of task to check
+            user_id: ID of the user to check for
+
+        Returns:
+            True if task exists for the user, False otherwise
+        """
+        pass

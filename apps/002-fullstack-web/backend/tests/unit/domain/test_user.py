@@ -1,7 +1,6 @@
 """Unit tests for User entity and models."""
 
-import pytest
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from src.domain.entities.user import User, UserCreate, UserRead, UserUpdate
 
@@ -68,7 +67,7 @@ class TestUser:
         )
 
         # Email should be present
-        assert hasattr(user, 'email')
+        assert hasattr(user, "email")
         assert user.email is not None
 
 

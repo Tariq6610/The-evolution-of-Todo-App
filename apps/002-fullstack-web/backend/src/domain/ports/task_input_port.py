@@ -3,6 +3,7 @@
 This port defines the contract for task modification operations.
 Following Hexagonal Architecture - adapters implement this interface.
 """
+
 from abc import ABC, abstractmethod
 
 from src.domain.entities.priority import Priority

@@ -1,0 +1,68 @@
+
+services:
+  # PostgreSQL Database for the Todo application
+  db:
+    image: postgres:15-alpine
+    container_name: todo_ai_chatbot_db
+    restart: always
+    environment:
+      POSTGRES_DB: todo_db
+      POSTGRES_USER: todo_user
+      POSTGRES_PASSWORD: todo_password
+    volumes:
+      - todo_ai_chatbot_postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U todo_user -d todo_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend service (DEV)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: todo_ai_chatbot_backend
+    restart: always
+    command: uvicorn src.main:app --reload --host 0.0.0.0 --port 7860
+    environment:
+      - DATABASE_URL=postgresql://todo_user:todo_password@db:5432/todo_db
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-your-openai-api-key-here}
+      - CORS_EXTRA_ORIGINS=http://frontend:3000,http://localhost:4000
+    ports:
+      - "7860:7860"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - ./backend/uploads:/app/uploads
+      - ./backend/.env:/app/.env:ro
+
+  # Frontend service (DEV)
+  frontend:
+    user: root
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: todo_ai_chatbot_frontend
+    restart: always
+    command: sh -c "rm -rf .next && npm run dev"
+    environment:
+      - NEXT_PUBLIC_API_URL=/api/v1
+      - BACKEND_URL=http://backend:7860
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:4000}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-your-nextauth-secret}
+    ports:
+      - "4000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - ./frontend/.env.local:/app/.env.local:ro
+
+volumes:
+  todo_ai_chatbot_postgres_data:

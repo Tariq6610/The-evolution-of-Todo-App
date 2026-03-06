@@ -3,19 +3,20 @@
 Debug script to test the get_all_tasks_for_user functionality
 """
 
-import sys
 import os
+import sys
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlmodel import Session
+
 from src.adapters.db.session import engine
 from src.adapters.db.task_repository import SQLModelTaskRepository
 from src.domain.services.todo_service import TodoService
 
 
-def test_get_all_tasks_for_user():
+def test_get_all_tasks_for_user() -> None:
     """Test the get_all_tasks_for_user method that's causing the error."""
 
     with Session(engine) as session:
@@ -34,14 +35,12 @@ def test_get_all_tasks_for_user():
 
             # Test with filters
             filtered_tasks = todo_service.get_all_tasks_for_user(
-                user_id=test_user_id,
-                status="PENDING"
+                user_id=test_user_id, status="PENDING"
             )
             print(f"✓ Successfully retrieved {len(filtered_tasks)} pending tasks")
 
             filtered_tasks2 = todo_service.get_all_tasks_for_user(
-                user_id=test_user_id,
-                priority="HIGH"
+                user_id=test_user_id, priority="HIGH"
             )
             print(f"✓ Successfully retrieved {len(filtered_tasks2)} high priority tasks")
 
@@ -50,6 +49,7 @@ def test_get_all_tasks_for_user():
         except Exception as e:
             print(f"✗ Error in get_all_tasks_for_user: {e}")
             import traceback
+
             traceback.print_exc()
 
 

@@ -1,11 +1,12 @@
 """Unit tests for Task entity and models."""
 
-import pytest
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
+import pytest
+
+from src.domain.entities.priority import Priority
 from src.domain.entities.task import Task
 from src.domain.entities.task_status import TaskStatus
-from src.domain.entities.priority import Priority
 
 
 class TestTask:
@@ -16,6 +17,7 @@ class TestTask:
         task = Task(
             id="task-1",
             title="Test Task",
+            description=None,
         )
 
         assert task.id == "task-1"
@@ -50,6 +52,7 @@ class TestTask:
         task = Task(
             id="task-3",
             title="Done Task",
+            description=None,
             status=TaskStatus.COMPLETED,
         )
 
@@ -60,6 +63,7 @@ class TestTask:
         task = Task(
             id="task-4",
             title="Low Priority Task",
+            description=None,
             priority=Priority.LOW,
         )
 
@@ -69,7 +73,7 @@ class TestTask:
         """Should auto-generate created_at and updated_at timestamps."""
         before = datetime.now(UTC)
 
-        task = Task(id="task-5", title="Test Task")
+        task = Task(id="task-5", title="Test Task", description=None)
 
         after = datetime.now(UTC)
 
@@ -79,7 +83,7 @@ class TestTask:
     def test_title_must_not_be_whitespace_only(self) -> None:
         """Should reject titles with only whitespace."""
         with pytest.raises(ValueError, match="Title cannot be empty or whitespace-only"):
-            Task(id="task-6", title="   ")
+            Task(id="task-6", title="   ", description=None)
 
 
 class TestTaskMethods:
@@ -89,7 +93,7 @@ class TestTaskMethods:
         """Should mark task as completed and update timestamp."""
         before = datetime.now(UTC)
 
-        task = Task(id="task-7", title="Test", status=TaskStatus.PENDING)
+        task = Task(id="task-7", title="Test", description=None, status=TaskStatus.PENDING)
 
         task.mark_completed()
 
@@ -102,7 +106,7 @@ class TestTaskMethods:
         """Should mark task as pending and update timestamp."""
         before = datetime.now(UTC)
 
-        task = Task(id="task-8", title="Test", status=TaskStatus.COMPLETED)
+        task = Task(id="task-8", title="Test", description=None, status=TaskStatus.COMPLETED)
 
         task.mark_pending()
 
@@ -113,7 +117,7 @@ class TestTaskMethods:
 
     def test_toggle_status_from_pending(self) -> None:
         """Should toggle from PENDING to COMPLETED."""
-        task = Task(id="task-9", title="Test", status=TaskStatus.PENDING)
+        task = Task(id="task-9", title="Test", description=None, status=TaskStatus.PENDING)
 
         task.toggle_status()
 
@@ -121,7 +125,7 @@ class TestTaskMethods:
 
     def test_toggle_status_from_completed(self) -> None:
         """Should toggle from COMPLETED to PENDING."""
-        task = Task(id="task-10", title="Test", status=TaskStatus.COMPLETED)
+        task = Task(id="task-10", title="Test", description=None, status=TaskStatus.COMPLETED)
 
         task.toggle_status()
 
@@ -129,13 +133,13 @@ class TestTaskMethods:
 
     def test_multiple_toggles(self) -> None:
         """Should correctly toggle status multiple times."""
-        task = Task(id="task-11", title="Test", status=TaskStatus.PENDING)
+        task = Task(id="task-11", title="Test", description=None, status=TaskStatus.PENDING)
 
         task.toggle_status()
         assert task.status == TaskStatus.COMPLETED
 
         task.toggle_status()
-        assert task.status == TaskStatus.PENDING
+        assert task.status == TaskStatus.PENDING  # type: ignore
 
         task.toggle_status()
         assert task.status == TaskStatus.COMPLETED

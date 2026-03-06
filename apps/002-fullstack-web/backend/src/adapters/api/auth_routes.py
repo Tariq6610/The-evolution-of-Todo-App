@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from typing import Optional
+from sqlmodel import Session
+
+from src.adapters.db.session import get_session
+from src.adapters.db.user_repository import SQLUserRepository
+from src.adapters.security.jwt import get_current_user
 from src.domain.entities.user import User, UserCreate
 from src.domain.services.auth_service import AuthService
-from src.adapters.db.user_repository import SQLUserRepository
-from src.adapters.db.session import get_session
-from src.adapters.security.jwt import get_current_user
-from sqlmodel import Session
-from fastapi.responses import JSONResponse
-from fastapi import Request
 
 router = APIRouter(tags=["Authentication"])
 
@@ -21,7 +20,7 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: Optional[str] = None
+    email: str | None = None
 
 
 class UserResponse(BaseModel):
@@ -51,10 +50,10 @@ def register(
             id=user.id or "",
             email=user.email,
             full_name=user.full_name or "",
-            is_active=user.is_active
+            is_active=user.is_active,
         )
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
 
 @router.post("/login")
@@ -81,7 +80,7 @@ def login(
             value=access_token,
             httponly=True,  # Prevent XSS attacks
             secure=True,  # Required for HTTPS in production
-            samesite="none",  # Required for cross-origin requests (frontend/backend on different domains)
+            samesite="none",  # Required for cross-origin requests
             max_age=1800,  # 30 minutes expiry
             path="/",  # Make cookie available for all routes
             domain=None,  # Use this to allow cookie to be sent with cross-origin requests
@@ -92,7 +91,7 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from e
 
 
 @router.post("/logout")
@@ -110,5 +109,5 @@ def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
         id=current_user.id or "",
         email=current_user.email,
         full_name=current_user.full_name or "",
-        is_active=current_user.is_active
+        is_active=current_user.is_active,
     )

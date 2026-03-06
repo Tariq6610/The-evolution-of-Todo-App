@@ -5,27 +5,26 @@ import uvicorn
 
 
 def main() -> None:
-    # Add the current directory to Python path to resolve modules
     sys.path.insert(0, ".")
 
-    # Get the port from environment variable, default to 8000 if not set
-    port_str: str = os.environ.get("PORT", "8000")
+    # Hugging Face always expects 7860
+    port = 7860
 
-    # Convert the port to integer
-    try:
-        port: int = int(port_str)
-    except ValueError:
-        print(f"Invalid PORT value: '{port_str}'. Using default port 8000.")
-        port = 8000
+    import contextlib
+
+    # Optional override for local dev or other platforms
+    env_port = os.environ.get("PORT")
+    if env_port:
+        with contextlib.suppress(ValueError):
+            port = int(env_port)
 
     print(f"Starting server on port {port}")
 
-    # Run the uvicorn server
     uvicorn.run(
         "src.main:app",
         host="0.0.0.0",
         port=port,
-        reload=False,  # Disable reload in production
+        reload=False,
     )
 
 

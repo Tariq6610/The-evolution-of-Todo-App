@@ -168,30 +168,28 @@ class TodoService:
         if search:
             search_lower = search.lower()
             filtered_tasks = [
-                task for task in filtered_tasks
-                if search_lower in task.title.lower() or
-                   (task.description and search_lower in task.description.lower())
+                task
+                for task in filtered_tasks
+                if search_lower in task.title.lower()
+                or (task.description and search_lower in task.description.lower())
             ]
 
         if status:
             status_lower = status.lower()
             filtered_tasks = [
-                task for task in filtered_tasks
-                if task.status.value.lower() == status_lower
+                task for task in filtered_tasks if task.status.value.lower() == status_lower
             ]
 
         if priority:
             priority_lower = priority.lower()
             filtered_tasks = [
-                task for task in filtered_tasks
-                if task.priority.value.lower() == priority_lower
+                task for task in filtered_tasks if task.priority.value.lower() == priority_lower
             ]
 
         if tag:
             tag_lower = tag.lower()
             filtered_tasks = [
-                task for task in filtered_tasks
-                if tag_lower in [t.lower() for t in task.tags]
+                task for task in filtered_tasks if tag_lower in [t.lower() for t in task.tags]
             ]
 
         # Apply sorting
@@ -335,7 +333,9 @@ class TodoService:
             ValueError: If task_id not found or task doesn't belong to user
         """
         if not self.storage.exists_for_user(task_id, user_id):
-            raise ValueError(f"Task with ID '{task_id}' not found or does not belong to user {user_id}")
+            raise ValueError(
+                f"Task with ID '{task_id}' not found or does not belong to user {user_id}"
+            )
         self.storage.delete_for_user(task_id, user_id)
 
     def toggle_task_status(self, task_id: str) -> Task:

@@ -174,12 +174,54 @@ validate_python_quality() {
     # Check if mypy is available
     if command -v mypy &> /dev/null; then
         echo "Running mypy (strict mode)..."
-        if mypy --strict $python_files 2>/dev/null; then
-            print_success "mypy passed (strict mode)"
-        else
-            print_error "mypy failed. Run: mypy --strict <files>"
-            return 1
-        fi
+
+        # Group files by their nearest parent directory with pyproject.toml or mypy.ini
+        declare -A project_to_files
+
+        for f in $python_files; do
+            # Find the nearest parent directory with mypy config
+            dir=""
+            path="$f"
+            while [[ -n "$path" && "$path" != "." ]]; do
+                parent=$(dirname "$path")
+                if [[ -f "$parent/pyproject.toml" ]] || [[ -f "$parent/mypy.ini" ]] || [[ -f "$parent/.mypy.ini" ]]; then
+                    dir="$parent"
+                    break
+                fi
+                path="$parent"
+            done
+
+            if [[ -n "$dir" ]]; then
+                project_to_files["$dir"]="${project_to_files[$dir]} $f"
+            else
+                # No config found, add to root
+                project_to_files["."]="${project_to_files[.]} $f"
+            fi
+        done
+
+        # Run mypy for each project group
+        for project_dir in "${!project_to_files[@]}"; do
+            files="${project_to_files[$project_dir]}"
+            echo "Checking project in $project_dir..."
+
+            # Convert files to paths relative to the project directory if we cd into it
+            rel_files=""
+            for f in $files; do
+                if [[ "$project_dir" == "." ]]; then
+                    rel_files="$rel_files $f"
+                else
+                    rel="${f#$project_dir/}"
+                    rel_files="$rel_files $rel"
+                fi
+            done
+
+            if (cd "$project_dir" && mypy --strict $rel_files); then
+                print_success "mypy passed for project: $project_dir"
+            else
+                print_error "mypy failed for project: $project_dir. Run: (cd $project_dir && mypy --strict <files>)"
+                return 1
+            fi
+        done
     else
         print_warning "mypy not installed, skipping type checking"
     fi

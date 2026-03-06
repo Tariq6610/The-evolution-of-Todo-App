@@ -1,5 +1,3 @@
-from typing import Any
-
 from src.adapters.security.jwt import create_access_token
 from src.adapters.security.password import get_password_hash, verify_password
 from src.domain.entities.user import User, UserCreate

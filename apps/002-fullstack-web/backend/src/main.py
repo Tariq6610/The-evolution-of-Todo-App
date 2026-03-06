@@ -7,8 +7,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.adapters.api import auth_routes, task_routes  # type: ignore
-from src.adapters.db.session import init_db  # type: ignore
+from src.adapters.api import auth_routes, task_routes
+from src.adapters.db.session import init_db
 
 
 class ProxyHeadersMiddleware(BaseHTTPMiddleware):
@@ -79,6 +79,11 @@ app.add_middleware(ProxyHeadersMiddleware)
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
+
+
+@app.get("/")
+def root() -> dict[str, str]:
+    return {"status": "Backend is running"}
 
 
 @app.get("/health")

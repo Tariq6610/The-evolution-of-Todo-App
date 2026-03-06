@@ -1,18 +1,17 @@
 """Integration tests for task endpoints with authentication."""
 
 import pytest
+from collections.abc import Generator
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
-from src.main import app
-from src.domain.entities.user import User, UserCreate
-from src.domain.entities.task import Task
 from src.adapters.db.session import get_session
 from src.adapters.db.user_repository import SQLUserRepository
-from src.adapters.security.password import get_password_hash
 from src.adapters.security.jwt import create_access_token
-
+from src.adapters.security.password import get_password_hash
+from src.domain.entities.user import User
+from src.main import app
 
 # Test database setup
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -24,7 +23,7 @@ engine = create_engine(
 
 
 @pytest.fixture
-def session():
+def session() -> Generator[Session, None, None]:
     """Create a test database session."""
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
@@ -33,9 +32,10 @@ def session():
 
 
 @pytest.fixture
-def client(session):
+def client(session: Session) -> Generator[TestClient, None, None]:
     """Create a test client with a test database session."""
-    def override_get_session():
+
+    def override_get_session() -> Generator[Session, None, None]:
         yield session
 
     app.dependency_overrides[get_session] = override_get_session
@@ -62,7 +62,9 @@ def auth_headers(client: TestClient, session: Session) -> dict[str, str]:
 class TestCreateTask:
     """Test cases for creating tasks."""
 
-    def test_create_task_successfully(self, client: TestClient, auth_headers: dict) -> None:
+    def test_create_task_successfully(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should create a new task and return task data."""
         response = client.post(
             "/tasks",
@@ -93,7 +95,9 @@ class TestCreateTask:
 
         assert response.status_code == 401
 
-    def test_create_task_with_minimal_data(self, client: TestClient, auth_headers: dict) -> None:
+    def test_create_task_with_minimal_data(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should create task with only title."""
         response = client.post(
             "/tasks",
@@ -112,7 +116,9 @@ class TestCreateTask:
 class TestReadTasks:
     """Test cases for reading tasks."""
 
-    def test_list_tasks_successfully(self, client: TestClient, auth_headers: dict) -> None:
+    def test_list_tasks_successfully(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should return list of user's tasks."""
         # Create tasks
         client.post(
@@ -133,7 +139,7 @@ class TestReadTasks:
         data = response.json()
         assert len(data) == 2
 
-    def test_list_empty_tasks(self, client: TestClient, auth_headers: dict) -> None:
+    def test_list_empty_tasks(self, client: TestClient, auth_headers: dict[str, str]) -> None:
         """Should return empty list when user has no tasks."""
         response = client.get("/tasks", headers=auth_headers)
 
@@ -151,7 +157,9 @@ class TestReadTasks:
 class TestUpdateTask:
     """Test cases for updating tasks."""
 
-    def test_update_task_successfully(self, client: TestClient, auth_headers: dict) -> None:
+    def test_update_task_successfully(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should update an existing task."""
         # Create task
         create_response = client.post(
@@ -176,7 +184,9 @@ class TestUpdateTask:
         assert data["title"] == "Updated Title"
         assert data["priority"] == "HIGH"
 
-    def test_update_task_without_auth(self, client: TestClient, auth_headers: dict) -> None:
+    def test_update_task_without_auth(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should fail when not authenticated."""
         # Create task
         create_response = client.post(
@@ -194,7 +204,9 @@ class TestUpdateTask:
 
         assert response.status_code == 401
 
-    def test_update_nonexistent_task(self, client: TestClient, auth_headers: dict) -> None:
+    def test_update_nonexistent_task(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should fail when task does not exist."""
         response = client.patch(
             "/tasks/nonexistent-id",
@@ -208,7 +220,9 @@ class TestUpdateTask:
 class TestDeleteTask:
     """Test cases for deleting tasks."""
 
-    def test_delete_task_successfully(self, client: TestClient, auth_headers: dict) -> None:
+    def test_delete_task_successfully(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should delete an existing task."""
         # Create task
         create_response = client.post(
@@ -228,7 +242,9 @@ class TestDeleteTask:
         tasks = list_response.json()
         assert len(tasks) == 0
 
-    def test_delete_task_without_auth(self, client: TestClient, auth_headers: dict) -> None:
+    def test_delete_task_without_auth(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should fail when not authenticated."""
         # Create task
         create_response = client.post(
@@ -243,7 +259,9 @@ class TestDeleteTask:
 
         assert response.status_code == 401
 
-    def test_delete_nonexistent_task(self, client: TestClient, auth_headers: dict) -> None:
+    def test_delete_nonexistent_task(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should fail when task does not exist."""
         response = client.delete("/tasks/nonexistent-id", headers=auth_headers)
 
@@ -253,7 +271,9 @@ class TestDeleteTask:
 class TestToggleStatus:
     """Test cases for toggling task status."""
 
-    def test_toggle_status_from_pending(self, client: TestClient, auth_headers: dict) -> None:
+    def test_toggle_status_from_pending(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should toggle task from PENDING to COMPLETED."""
         # Create task
         create_response = client.post(
@@ -270,7 +290,9 @@ class TestToggleStatus:
         data = response.json()
         assert data["status"] == "COMPLETED"
 
-    def test_toggle_status_from_completed(self, client: TestClient, auth_headers: dict) -> None:
+    def test_toggle_status_from_completed(
+        self, client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Should toggle task from COMPLETED to PENDING."""
         # Create and complete task
         create_response = client.post(
@@ -293,7 +315,9 @@ class TestToggleStatus:
 class TestUserIsolation:
     """Test cases for multi-user data isolation."""
 
-    def test_users_cannot_access_other_users_tasks(self, client: TestClient, session: Session) -> None:
+    def test_users_cannot_access_other_users_tasks(
+        self, client: TestClient, session: Session
+    ) -> None:
         """Should prevent user A from accessing user B's tasks."""
         # Create user A
         user_a = User(
@@ -327,7 +351,9 @@ class TestUserIsolation:
 
         assert response.status_code == 404  # Not found for user B
 
-    def test_users_cannot_update_other_users_tasks(self, client: TestClient, session: Session) -> None:
+    def test_users_cannot_update_other_users_tasks(
+        self, client: TestClient, session: Session
+    ) -> None:
         """Should prevent user A from updating user B's tasks."""
         # Create two users
         user_repo = SQLUserRepository(session)
@@ -364,7 +390,9 @@ class TestUserIsolation:
 
         assert response.status_code == 404
 
-    def test_users_cannot_delete_other_users_tasks(self, client: TestClient, session: Session) -> None:
+    def test_users_cannot_delete_other_users_tasks(
+        self, client: TestClient, session: Session
+    ) -> None:
         """Should prevent user A from deleting user B's tasks."""
         # Create two users
         user_repo = SQLUserRepository(session)

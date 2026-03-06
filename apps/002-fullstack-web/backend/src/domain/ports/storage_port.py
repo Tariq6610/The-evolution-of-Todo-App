@@ -3,6 +3,7 @@
 This port defines the contract for task storage adapters.
 Following Hexagonal Architecture - adapters implement this interface.
 """
+
 from abc import ABC, abstractmethod
 
 from src.domain.entities.task import Task
@@ -47,9 +48,23 @@ class StoragePort(ABC):
         pass
 
     @abstractmethod
-    def get_all(self) -> list[Task]:
+    def get_all(
+        self,
+        search: str | None = None,
+        status: str | None = None,
+        priority: str | None = None,
+        tag: str | None = None,
+        sort_by: str | None = None,
+    ) -> list[Task]:
         """
-        Retrieve all tasks.
+        Retrieve all tasks with optional filtering and sorting.
+
+        Args:
+            search: Filter by keyword in title or description
+            status: Filter by status (PENDING or COMPLETED)
+            priority: Filter by priority (LOW, MEDIUM, or HIGH)
+            tag: Filter by tag
+            sort_by: Sort by field (created_at, updated_at, title, priority)
 
         Returns:
             List of all tasks (empty list if none exist)

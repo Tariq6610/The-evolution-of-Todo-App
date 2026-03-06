@@ -3,21 +3,23 @@
 Test script to verify user-specific task functionality.
 """
 
-import sys
 import os
+import sys
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlmodel import Session
-from src.adapters.db.session import engine
-from src.adapters.db.task_repository import SQLModelTaskRepository
-from src.domain.services.todo_service import TodoService
-from src.domain.entities.priority import Priority
 from uuid import uuid4
 
+from sqlmodel import Session
 
-def test_user_specific_functionality():
+from src.adapters.db.session import engine
+from src.adapters.db.task_repository import SQLModelTaskRepository
+from src.domain.entities.priority import Priority
+from src.domain.services.todo_service import TodoService
+
+
+def test_user_specific_functionality() -> None:
     """Test that user-specific functionality works correctly."""
 
     with Session(engine) as session:
@@ -35,7 +37,7 @@ def test_user_specific_functionality():
             title="User 1 Task",
             user_id=user1_id,
             description="Task for user 1",
-            priority=Priority.HIGH
+            priority=Priority.HIGH,
         )
         print(f"Created task for user 1: {task1.title}")
 
@@ -44,7 +46,7 @@ def test_user_specific_functionality():
             title="User 1 Second Task",
             user_id=user1_id,
             description="Another task for user 1",
-            priority=Priority.MEDIUM
+            priority=Priority.MEDIUM,
         )
         print(f"Created second task for user 1: {task2.title}")
 
@@ -53,7 +55,7 @@ def test_user_specific_functionality():
             title="User 2 Task",
             user_id=user2_id,
             description="Task for user 2",
-            priority=Priority.LOW
+            priority=Priority.LOW,
         )
         print(f"Created task for user 2: {task3.title}")
 
@@ -76,7 +78,7 @@ def test_user_specific_functionality():
             task_id=task1.id,
             user_id=user1_id,
             title="Updated User 1 Task",
-            description="Updated description for user 1"
+            description="Updated description for user 1",
         )
         print(f"Updated task: {updated_task.title}")
 
@@ -85,7 +87,7 @@ def test_user_specific_functionality():
             todo_service.update_task_for_user(
                 task_id=task1.id,
                 user_id=user2_id,  # Wrong user ID
-                title="Should fail"
+                title="Should fail",
             )
             print("✗ Security check failed - user 2 was able to update user 1's task")
         except ValueError:

@@ -5,26 +5,25 @@ Run from the backend directory: python scripts/create_test_tasks.py
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlmodel import Session, select
-from passlib.context import CryptContext
+
 from src.adapters.db.session import engine, init_db
-from src.domain.entities.user import User
 from src.adapters.db.task_repository import TaskTable
+from src.domain.entities.user import User
 
 
-async def create_test_tasks():
+async def create_test_tasks() -> None:
     """Create test tasks for dashboard demonstration."""
 
     # Create tables if they don't exist
     init_db()
 
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     user_email = "tariq@gmail.com"
 
     with Session(engine) as session:
@@ -54,7 +53,7 @@ async def create_test_tasks():
                 priority="HIGH",
                 status="PENDING",
                 tags="work,important,q1",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Review security audit",
@@ -62,7 +61,7 @@ async def create_test_tasks():
                 priority="HIGH",
                 status="PENDING",
                 tags="security,urgent",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Client meeting preparation",
@@ -70,9 +69,8 @@ async def create_test_tasks():
                 priority="HIGH",
                 status="COMPLETED",
                 tags="client,presentation",
-                user_id=user.id
+                user_id=user.id,
             ),
-
             # Medium priority tasks
             TaskTable(
                 title="Update documentation",
@@ -80,7 +78,7 @@ async def create_test_tasks():
                 priority="MEDIUM",
                 status="PENDING",
                 tags="docs,api",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Code review for PR #42",
@@ -88,7 +86,7 @@ async def create_test_tasks():
                 priority="MEDIUM",
                 status="PENDING",
                 tags="code-review,backend",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Write unit tests",
@@ -96,7 +94,7 @@ async def create_test_tasks():
                 priority="MEDIUM",
                 status="COMPLETED",
                 tags="testing,auth",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Update dependencies",
@@ -104,9 +102,8 @@ async def create_test_tasks():
                 priority="MEDIUM",
                 status="PENDING",
                 tags="maintenance,frontend",
-                user_id=user.id
+                user_id=user.id,
             ),
-
             # Low priority tasks
             TaskTable(
                 title="Clean up old logs",
@@ -114,7 +111,7 @@ async def create_test_tasks():
                 priority="LOW",
                 status="PENDING",
                 tags="maintenance,devops",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Add comments to legacy code",
@@ -122,7 +119,7 @@ async def create_test_tasks():
                 priority="LOW",
                 status="COMPLETED",
                 tags="docs,legacy",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Organize desktop files",
@@ -130,7 +127,7 @@ async def create_test_tasks():
                 priority="LOW",
                 status="PENDING",
                 tags="personal,organization",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Update email signature",
@@ -138,9 +135,8 @@ async def create_test_tasks():
                 priority="LOW",
                 status="PENDING",
                 tags="personal,admin",
-                user_id=user.id
+                user_id=user.id,
             ),
-
             # Additional tasks for variety
             TaskTable(
                 title="Learn new framework",
@@ -148,7 +144,7 @@ async def create_test_tasks():
                 priority="MEDIUM",
                 status="PENDING",
                 tags="learning,rust",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Backup database",
@@ -156,7 +152,7 @@ async def create_test_tasks():
                 priority="HIGH",
                 status="COMPLETED",
                 tags="backup,devops,critical",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Team lunch planning",
@@ -164,7 +160,7 @@ async def create_test_tasks():
                 priority="LOW",
                 status="PENDING",
                 tags="team,social",
-                user_id=user.id
+                user_id=user.id,
             ),
             TaskTable(
                 title="Performance optimization",
@@ -172,7 +168,7 @@ async def create_test_tasks():
                 priority="MEDIUM",
                 status="PENDING",
                 tags="performance,database",
-                user_id=user.id
+                user_id=user.id,
             ),
         ]
 
@@ -190,7 +186,7 @@ async def create_test_tasks():
         medium = sum(1 for t in all_tasks if t.priority == "MEDIUM")
         low = sum(1 for t in all_tasks if t.priority == "LOW")
 
-        print(f"\nTask Summary:")
+        print("\nTask Summary:")
         print(f"  Total: {len(all_tasks)}")
         print(f"  Completed: {completed}")
         print(f"  Pending: {pending}")

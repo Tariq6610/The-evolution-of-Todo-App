@@ -1,0 +1,3 @@
+-- This file can be used to run initial database setup commands
+-- Currently empty as the application handles table creation via SQLModel
+-- The application will automatically create tables on startup
